@@ -1,4 +1,4 @@
 #!/usr/bin/env node
-import { login} from "./login/login";
+import { startProgram } from './login.js';
 
-login();
+startProgram();
