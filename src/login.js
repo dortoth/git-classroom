@@ -4,7 +4,7 @@ import inquirer from "inquirer";
 import figlet from "figlet";
 import align_text from "align-text";
 import ora from "ora";
-import { openMainMenu } from "./mainMenu.js";
+import { openMainMenu } from "./menu.js";
 import "dotenv/config";
 
 const clientId = process.env.CLIENT_ID;
@@ -13,7 +13,7 @@ const continueQuestion = [
   {
     type: "input",
     name: "proceed",
-    message: "Would you like to continue? Press any key.",
+    message: "Would you like to continue with the login? Press any key.",
   },
 ];
 
@@ -26,6 +26,14 @@ const loginQuestion = [
   },
 ];
 
+const gitQuestion = [
+  {
+    type: "confirm",
+    name: "gitQuestion",
+    message: "Do you have Git installed?",
+  },
+];
+
 function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -34,9 +42,77 @@ function centerText(length, terminalWidth) {
   return Math.max(0, Math.floor((terminalWidth - length) / 2));
 }
 
-function logError() {
+function logError(error) {
   console.log("Something went wrong...");
   console.log("Please try again!");
+  console.log(error);
+}
+
+export async function startProgram() {
+  await figlet(
+    "Welcome to Meowzerus Classroom",
+    {
+      font: "Small",
+      horizontalLayout: "fitted",
+      verticalLayout: "fitted",
+    },
+
+    function (err, data) {
+      if (err) {
+        logError(err);
+        return;
+      }
+
+      let tempResult = align_text(data, (length) =>
+        centerText(length, process.stdout.columns || 80),
+      );
+      let result = chalk.whiteBright(tempResult);
+      console.log(result);
+    },
+  );
+
+  await figlet(
+    "The fun CLI for your Git classroom",
+    {
+      font: "mini",
+      horizontalLayout: "fitted",
+      verticalLayout: "fitted",
+    },
+    function (err, data) {
+      if (err) {
+        logError(err);
+        return;
+      }
+
+      let tempResult = align_text(data, (length) =>
+        centerText(length, process.stdout.columns || 80),
+      );
+      let result = chalk.red(tempResult);
+      console.log(result);
+    },
+  );
+
+  await wait(3000);
+  console.clear();
+
+  isGitInstalled();
+}
+
+function isGitInstalled() {
+  inquirer
+    .prompt(gitQuestion)
+    .then((answer) => {
+      if(answer.gitQuestion !== true) {
+        console.log("Sorry you need Git to run this application. Please install it.");
+        console.log("You can find it at: https://git-scm.com/install/");
+        wait(2000);
+        process.exit(1);
+      }
+      continueProcess();
+    })
+    .catch((error) => {
+      logError(error);
+    });
 }
 
 function continueProcess() {
@@ -54,35 +130,37 @@ function continueProcess() {
         process.exit(1);
       }
     })
-    .catch(() => {
-      logError();
+    .catch((error) => {
+      logError(error);
     });
 }
 
-async function loginIntoGitHub() {
-  fetch("https://github.com/login/device/code", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ client_id: clientId }),
-  })
-    .then((res) => res.json())
-    .then(async (data) => {
-      const userCode = data.user_code;
-      const deviceCode = data.device_code;
-      const expiresIn = data.expires_in;
-      console.log(
-        "Please go to  https://github.com/login/device and enter your Code" +
-          userCode,
-      );
 
-      const hubToken = await pollForGitHubToke(deviceCode, expiresIn);
+export async function loginProcess() {
+  await wait(3000);
 
-      await openMainMenu({
-        provider: "github",
-        token: hubToken,
-      });
+  console.clear();
+
+  inquirer
+    .prompt(loginQuestion)
+    .then(async (answer) => {
+      if (answer.loginOptions === "GitHub") {
+        loginIntoGitHub();
+      } else if (answer.loginOptions === "GitLab") {
+        //TODO
+        fetch("https://gitlab.example.com/oauth/authorize_device", {
+          method: "POST",
+        })
+          .then((res) => res.json())
+          .then(() => {})
+          .catch((error) => logError(error));
+      } else {
+        console.log("Sorry we only support the other two platforms.");
+      }
     })
-    .catch(logError);
+    .catch((error) => {
+      logError(error);
+    });
 }
 
 async function pollForGitHubToke(deviceCode, expiresIn) {
@@ -119,80 +197,40 @@ async function pollForGitHubToke(deviceCode, expiresIn) {
   }
 }
 
-export async function startProgram() {
-  await figlet(
-    "Welcome to Meowzerus Classroom",
-    {
-      font: "Small",
-      horizontalLayout: "fitted",
-      verticalLayout: "fitted",
-    },
-
-    function (err, data) {
-      if (err) {
-        logError();
-        console.dir(err);
-        return;
-      }
-
-      let tempResult = align_text(data, (length) =>
-        centerText(length, process.stdout.columns || 80),
+async function loginIntoGitHub() {
+  fetch("https://github.com/login/device/code", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ client_id: clientId }),
+  })
+    .then((res) => res.json())
+    .then(async (data) => {
+      const userCode = data.user_code;
+      const deviceCode = data.device_code;
+      const expiresIn = data.expires_in;
+      console.log(
+        "Please go to  https://github.com/login/device and enter your Code" +
+          userCode,
       );
-      let result = chalk.whiteBright(tempResult);
-      console.log(result);
-    },
-  );
 
-  await figlet(
-    "The fun CLI for your Git classroom",
-    {
-      font: "mini",
-      horizontalLayout: "fitted",
-      verticalLayout: "fitted",
-    },
-    function (err, data) {
-      if (err) {
-        logError();
-        console.dir(err);
-        return;
+      const hubToken = await pollForGitHubToke(deviceCode, expiresIn);
+
+      const spinner = ora("Menu is loading...").start();
+
+      try {
+        await openMainMenu({
+        provider: "github",
+        token: hubToken,
+      });
+        console.log("Login successful.")
+        spinner.succeed("Successfully loaded");
+      } catch {
+        console.log("Something went wrong...");
+        spinner.fail("Please try again!");
+        process.exit(1);
       }
 
-      let tempResult = align_text(data, (length) =>
-        centerText(length, process.stdout.columns || 80),
-      );
-      let result = chalk.red(tempResult);
-      console.log(result);
-    },
-  );
-
-  await wait(3000);
-
-  continueProcess();
-}
-
-export async function loginProcess() {
-  await wait(3000);
-
-  console.clear();
-
-  inquirer
-    .prompt(loginQuestion)
-    .then(async (answer) => {
-      if (answer.loginOptions === "GitHub") {
-        loginIntoGitHub();
-      } else if (answer.loginOptions === "GitLab") {
-        //TODO
-        fetch("https://gitlab.example.com/oauth/authorize_device", {
-          method: "POST",
-        })
-          .then((res) => res.json())
-          .then(() => {})
-          .catch(logError);
-      } else {
-        console.log("Sorry we only support the other two platforms.");
-      }
+  
     })
-    .catch(() => {
-      logError();
-    });
+    .catch((error) => logError(error));
 }
