@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import chalk from "chalk";
+import picocolors from "picocolors";
 import inquirer from "inquirer";
 import figlet from "figlet";
 import align_text from "align-text";
@@ -66,7 +66,7 @@ export async function startProgram() {
       let tempResult = align_text(data, (length) =>
         centerText(length, process.stdout.columns || 80),
       );
-      let result = chalk.whiteBright(tempResult);
+      let result = picocolors.whiteBright(tempResult);
       console.log(result);
     },
   );
@@ -87,7 +87,7 @@ export async function startProgram() {
       let tempResult = align_text(data, (length) =>
         centerText(length, process.stdout.columns || 80),
       );
-      let result = chalk.red(tempResult);
+      let result = picocolors.red(tempResult);
       console.log(result);
     },
   );

@@ -15,12 +15,13 @@
   "type": "module",
   "dependencies": {
     "align-text": "^1.0.2",
-    "chalk": "^6.0.0",
     "commander": "^15.0.0",
     "dotenv": "^17.4.2",
     "figlet": "^1.11.4",
     "inquirer": "^14.1.0",
-    "ora": "^9.4.1"
+    "npm": "^11.19.1",
+    "ora": "^9.4.1",
+    "picocolors": "^1.1.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
