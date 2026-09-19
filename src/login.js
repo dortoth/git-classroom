@@ -102,8 +102,10 @@ function isGitInstalled() {
   inquirer
     .prompt(gitQuestion)
     .then((answer) => {
-      if(answer.gitQuestion !== true) {
-        console.log("Sorry you need Git to run this application. Please install it.");
+      if (answer.gitQuestion !== true) {
+        console.log(
+          "Sorry you need Git to run this application. Please install it.",
+        );
         console.log("You can find it at: https://git-scm.com/install/");
         wait(2000);
         process.exit(1);
@@ -134,7 +136,6 @@ function continueProcess() {
       logError(error);
     });
 }
-
 
 export async function loginProcess() {
   await wait(3000);
@@ -176,7 +177,10 @@ async function pollForGitHubToke(deviceCode, expiresIn) {
       `https://github.com/login/oauth/access_token`,
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
         body: JSON.stringify({
           client_id: clientId,
           device_code: deviceCode,
@@ -200,7 +204,10 @@ async function pollForGitHubToke(deviceCode, expiresIn) {
 async function loginIntoGitHub() {
   fetch("https://github.com/login/device/code", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
     body: JSON.stringify({ client_id: clientId }),
   })
     .then((res) => res.json())
@@ -209,7 +216,7 @@ async function loginIntoGitHub() {
       const deviceCode = data.device_code;
       const expiresIn = data.expires_in;
       console.log(
-        "Please go to  https://github.com/login/device and enter your Code" +
+        "Please go to  https://github.com/login/device and enter your Code " +
           userCode,
       );
 
@@ -219,18 +226,16 @@ async function loginIntoGitHub() {
 
       try {
         await openMainMenu({
-        provider: "github",
-        token: hubToken,
-      });
-        console.log("Login successful.")
+          provider: "github",
+          token: hubToken,
+        });
+        console.log("Login successful.");
         spinner.succeed("Successfully loaded");
       } catch {
         console.log("Something went wrong...");
         spinner.fail("Please try again!");
         process.exit(1);
       }
-
-  
     })
     .catch((error) => logError(error));
 }
