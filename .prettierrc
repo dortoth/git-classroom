@@ -1,11 +1,6 @@
 {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.formatOnSave": true,
-    "prettier.documentSelectors": ["**/*"],
-    "prettier.enableDebugLogs": true,
-    "prettier.endOfLine": "lf",
-    "prettier.printWidth": 120,
-    "prettier.requireConfig": true,
-    "prettier.semi": false,
-    "prettier.singleQuote": true
+  "semi": true,
+  "singleQuote": true,
+  "printWidth": 120,
+  "endOfLine": "lf"
 }
