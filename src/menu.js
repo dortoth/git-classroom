@@ -1,3 +1,3 @@
-export function openMainMenu(hubToken, labToken) {
+export function openMainMenu(provider, token) {
     console.log('Todo: Main Menu');
 }
