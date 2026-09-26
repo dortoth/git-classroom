@@ -1,4 +1,7 @@
 #!/usr/bin/env node
-import { startProgram } from './login.js';
 
-startProgram();
+import { Login } from './login.js';
+
+const login = new Login();
+
+login.startProgram();
