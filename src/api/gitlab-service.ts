@@ -5,7 +5,6 @@ import dotenv from 'dotenv';
 import fs from 'fs';
 
 dotenv.config({ path: './secure/.env' });
-const clientIdGitHub = process.env['CLIENT_ID_GITHUB'];
 const clientIdGitLab = process.env['CLIENT_ID_GITLAB'];
 const TOKEN_PATH = './secure/token.json';
 
@@ -70,8 +69,7 @@ export class GitLabService {
 
         try {
           await openMainMenu('gitlab', labToken);
-          console.log('Login successful.');
-          spinner.succeed('Successfully loaded');
+          spinner.succeed('Login successful.');
         } catch {
           console.log('Something went wrong...');
           spinner.fail('Please try again!');

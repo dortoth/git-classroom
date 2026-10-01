@@ -6,7 +6,6 @@ import fs from 'fs';
 
 dotenv.config({ path: './secure/.env' });
 const clientIdGitHub = process.env['CLIENT_ID_GITHUB'];
-const clientIdGitLab = process.env['CLIENT_ID_GITLAB'];
 const TOKEN_PATH = './secure/token.json';
 
 export class GitHubService {
@@ -58,7 +57,9 @@ export class GitHubService {
         const userCode = data.user_code;
         const deviceCode = data.device_code;
         const expiresIn = data.expires_in;
-        console.log('Please go to  https://github.com/login/device and enter your Code ' + userCode);
+        console.log(
+          'Please go to  https://github.com/login/device and enter your Code ' + userCode,
+        );
 
         const hubToken = await this.pollForGitHubToken(deviceCode, expiresIn);
         fs.writeFileSync(TOKEN_PATH, JSON.stringify({ github_token: hubToken }));
@@ -67,8 +68,7 @@ export class GitHubService {
 
         try {
           await openMainMenu('github', hubToken);
-          console.log('Login successful.');
-          spinner.succeed('Successfully loaded');
+          spinner.succeed('Login successful.');
         } catch {
           console.log('Something went wrong...');
           spinner.fail('Please try again!');
