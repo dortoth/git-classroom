@@ -4,10 +4,10 @@ import inquirer from 'inquirer';
 import figlet from 'figlet';
 import align_text from 'align-text';
 import ora from 'ora';
-import { openMainMenu } from './menu.js';
 import { centerText, wait, logError, doesTokenExist } from '../utils/utils.js';
 import { GitHubService } from '../api/github-service.js';
 import { GitLabService } from '../api/gitlab-service.js';
+import { Menu } from './menu.js';
 
 const continueQuestion = [
   {
@@ -36,6 +36,7 @@ const gitQuestion = [
 
 const hubService = new GitHubService();
 const labService = new GitLabService();
+const menu = new Menu();
 
 export class Login {
   renderFiglet(
@@ -129,7 +130,7 @@ export class Login {
           const existingToken = await doesTokenExist('GitHub');
 
           if (existingToken) {
-            await openMainMenu(answer['loginOptions'], existingToken);
+            await menu.openMainMenu(answer['loginOptions'], existingToken);
           } else {
             hubService.loginIntoGitHub();
           }
@@ -137,7 +138,7 @@ export class Login {
           const existingToken = await doesTokenExist('GitLab');
 
           if (existingToken) {
-            await openMainMenu(answer['loginOptions'], existingToken);
+            await menu.openMainMenu(answer['loginOptions'], existingToken);
           } else {
             labService.loginIntoGitLab();
           }

@@ -1,14 +1,36 @@
 import { wait, logError } from '../utils/utils.js';
 import ora from 'ora';
-import { openMainMenu } from '../main/menu.js';
 import dotenv from 'dotenv';
 import fs from 'fs';
+import { Menu } from '../main/menu.js';
 
-dotenv.config({ path: './secure/.env' });
+dotenv.config({ path: './secure/.env', quiet: true });
 const clientIdGitLab = process.env['CLIENT_ID_GITLAB'];
 const TOKEN_PATH = './secure/token.json';
 
 export class GitLabService {
+  private get menu(): Menu {
+    return new Menu();
+  }
+
+  //-------------- GitLab Login --------------------
+  private async requestGitLabToken(deviceCode: string) {
+    const response = await fetch('https://gitlab.com/oauth/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({
+        client_id: clientIdGitLab,
+        device_code: deviceCode,
+        grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
+      }),
+    });
+
+    return response.json();
+  }
+
   async pollForGitLabToken(deviceCode: string, expiresIn: number) {
     const deadline = Date.now() + expiresIn * 1000;
 
@@ -19,20 +41,7 @@ export class GitLabService {
 
       await wait(5000);
 
-      const response = await fetch('https://gitlab.com/oauth/token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({
-          client_id: clientIdGitLab,
-          device_code: deviceCode,
-          grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
-        }),
-      });
-
-      const data = await response.json();
+      const data = await this.requestGitLabToken(deviceCode);
 
       if (data.error === 'authorization_pending') {
         continue;
@@ -68,7 +77,7 @@ export class GitLabService {
         const spinner = ora('Menu is loading...').start();
 
         try {
-          await openMainMenu('gitlab', labToken);
+          await this.menu.openMainMenu('GitLab', labToken);
           spinner.succeed('Login successful.');
         } catch {
           console.log('Something went wrong...');
@@ -77,5 +86,10 @@ export class GitLabService {
         }
       })
       .catch((error) => logError(error));
+  }
+
+  // ----------- GitLab Menu ------------------
+  async loadExisitingGitLabGroup() {
+    //TODO
   }
 }
