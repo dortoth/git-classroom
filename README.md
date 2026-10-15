@@ -7,9 +7,8 @@ This is a prototype for a bachelor's thesis. The program is a Node.js CLI simila
 From the project directory:
 
 1. Run `npm install`.
-2. Create `secure/.env` with the required provider client IDs.
-3. Run `npm run build`.
-4. Run `npm link` to make the command available in your terminal.
+2. Run `npm run build`.
+3. Run `npm link` to make the command available in your terminal.
 
 ## Start
 

@@ -1,18 +1,16 @@
-import { wait, logError } from '../utils/utils.js';
+import type { Utils } from '../utils/utils.js';
 import ora from 'ora';
 import dotenv from 'dotenv';
-import fs from 'fs';
-import { Menu } from '../main/menu.js';
+import type { Menu } from '../main/menu.js';
 import inquirer from 'inquirer';
-
-dotenv.config({ path: './secure/.env', quiet: true });
-const clientIdGitHub = process.env['CLIENT_ID_GITHUB'];
-const TOKEN_PATH = './secure/token.json';
+import { Entry } from '@napi-rs/keyring';
+import { CLIENT_ID_GITHUB, KEYRING_SERVICE } from '../utils/config.js';
 
 export class GitHubService {
-  private get menu(): Menu {
-    return new Menu();
-  }
+  constructor(
+    private readonly menu: Menu,
+    private readonly utils: Utils,
+  ) {}
 
   //-------------- GitHub Login --------------------
 
@@ -24,7 +22,7 @@ export class GitHubService {
         Accept: 'application/json',
       },
       body: JSON.stringify({
-        client_id: clientIdGitHub,
+        client_id: CLIENT_ID_GITHUB,
         device_code: deviceCode,
         grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
       }),
@@ -40,7 +38,7 @@ export class GitHubService {
         throw new Error('It seems like the session expired. Please try again');
       }
 
-      await wait(5000);
+      await this.utils.wait(5000);
 
       const data = await this.requestGitHubToken(deviceCode);
 
@@ -61,7 +59,7 @@ export class GitHubService {
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
-      body: JSON.stringify({ client_id: clientIdGitHub, scope: 'admin:org' }),
+      body: JSON.stringify({ client_id: CLIENT_ID_GITHUB, scope: 'admin:org' }),
     })
       .then((res) => res.json())
       .then(async (data) => {
@@ -73,7 +71,7 @@ export class GitHubService {
         );
 
         const hubToken = await this.pollForGitHubToken(deviceCode, expiresIn);
-        fs.writeFileSync(TOKEN_PATH, JSON.stringify({ github_token: hubToken }));
+        new Entry(KEYRING_SERVICE, 'github_token').setPassword(hubToken);
 
         const spinner = ora('Menu is loading...').start();
 
@@ -86,7 +84,7 @@ export class GitHubService {
           process.exit(1);
         }
       })
-      .catch((error) => logError(error));
+      .catch((error) => this.utils.logError(error));
   }
 
   // ----------- GitHub Menu ------------------

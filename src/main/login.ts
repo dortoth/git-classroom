@@ -3,17 +3,18 @@ import picocolors from 'picocolors';
 import inquirer from 'inquirer';
 import figlet from 'figlet';
 import align_text from 'align-text';
-import ora from 'ora';
-import { centerText, wait, logError, doesTokenExist } from '../utils/utils.js';
-import { GitHubService } from '../api/github-service.js';
-import { GitLabService } from '../api/gitlab-service.js';
-import { Menu } from './menu.js';
+import { spinner } from '../utils/utils.js';
+import type { GitHubService } from '../api/github-service.js';
+import type { GitLabService } from '../api/gitlab-service.js';
+import type { Utils } from '../utils/utils.js';
+import type { Menu } from './menu.js';
+import { execa } from 'execa';
 
 const continueQuestion = [
   {
     type: 'input',
     name: 'proceed',
-    message: 'Would you like to continue with the login? Press any key.',
+    message: 'Would you like to continue with the login? Press enter.',
   },
 ];
 
@@ -26,19 +27,14 @@ const loginQuestion = [
   },
 ];
 
-const gitQuestion = [
-  {
-    type: 'confirm',
-    name: 'gitQuestion',
-    message: 'Do you have Git installed?',
-  },
-];
-
-const hubService = new GitHubService();
-const labService = new GitLabService();
-const menu = new Menu();
-
 export class Login {
+  constructor(
+    private readonly hubService: GitHubService,
+    private readonly labService: GitLabService,
+    private readonly utils: Utils,
+    private readonly menu: Menu,
+  ) {}
+
   renderFiglet(
     text: string,
     options: Parameters<typeof figlet>[1],
@@ -47,13 +43,13 @@ export class Login {
     return new Promise<void>((resolve) => {
       figlet(text, options, (err, data) => {
         if (err || !data) {
-          logError(err);
+          this.utils.logError(err);
           resolve();
           return;
         }
 
         let tempResult = align_text(data, (length) =>
-          centerText(length, process.stdout.columns || 80),
+          this.utils.centerText(length, process.stdout.columns || 80),
         );
         let result = colorFn(tempResult);
         console.log(result);
@@ -75,34 +71,39 @@ export class Login {
       picocolors.red,
     );
 
-    await wait(3000);
+    await this.utils.wait(3000);
     console.clear();
 
-    this.isGitInstalled();
+    await this.isGitInstalled();
   }
 
-  private isGitInstalled() {
-    inquirer
-      .prompt(gitQuestion)
-      .then(async (answer) => {
-        if (answer['gitQuestion'] !== true) {
-          console.log('Sorry you need Git to run this application. Please install it.');
-          console.log('You can find it at: https://git-scm.com/install/');
-          await wait(2000);
-          process.exit(1);
-        }
-        this.continueProcess();
-      })
-      .catch((error) => {
-        logError(error);
-      });
+  private async isGitInstalled() {
+    console.log('Lets see if Git is installed');
+    spinner.start('Searching for Git..');
+    await this.utils.wait(2000);
+
+    try {
+      await execa`git --version`;
+    } catch {
+      console.log('Sorry you need Git to run this application. Please install it.');
+      console.log('You can find it at: https://git-scm.com/install/');
+      spinner.fail('Please try again when installed!');
+      await this.utils.wait(3000);
+      process.exit(1);
+    }
+
+    spinner.succeed('Git found!');
+    await this.utils.wait(2000);
+
+    console.clear();
+    this.continueProcess();
   }
 
   private continueProcess() {
     inquirer
       .prompt(continueQuestion)
       .then(async () => {
-        const spinner = ora('Login is loading...').start();
+        spinner.start('Login is loading...');
 
         try {
           await this.loginProcess();
@@ -114,12 +115,12 @@ export class Login {
         }
       })
       .catch((error) => {
-        logError(error);
+        this.utils.logError(error);
       });
   }
 
   private async loginProcess() {
-    await wait(3000);
+    await this.utils.wait(3000);
 
     console.clear();
 
@@ -127,27 +128,27 @@ export class Login {
       .prompt(loginQuestion)
       .then(async (answer) => {
         if (answer['loginOptions'] === 'GitHub') {
-          const existingToken = await doesTokenExist('GitHub');
+          const existingToken = await this.utils.doesTokenExist('GitHub');
 
           if (existingToken) {
-            await menu.openMainMenu(answer['loginOptions'], existingToken);
+            await this.menu.openMainMenu(answer['loginOptions'], existingToken);
           } else {
-            hubService.loginIntoGitHub();
+            this.hubService.loginIntoGitHub();
           }
         } else if (answer['loginOptions'] === 'GitLab') {
-          const existingToken = await doesTokenExist('GitLab');
+          const existingToken = await this.utils.doesTokenExist('GitLab');
 
           if (existingToken) {
-            await menu.openMainMenu(answer['loginOptions'], existingToken);
+            await this.menu.openMainMenu(answer['loginOptions'], existingToken);
           } else {
-            labService.loginIntoGitLab();
+            this.labService.loginIntoGitLab();
           }
         } else {
           console.log('Sorry we only support the other two platforms.');
         }
       })
       .catch((error) => {
-        logError(error);
+        this.utils.logError(error);
       });
   }
 }

@@ -1,17 +1,15 @@
-import { wait, logError } from '../utils/utils.js';
+import type { Utils } from '../utils/utils.js';
 import ora from 'ora';
 import dotenv from 'dotenv';
-import fs from 'fs';
-import { Menu } from '../main/menu.js';
-
-dotenv.config({ path: './secure/.env', quiet: true });
-const clientIdGitLab = process.env['CLIENT_ID_GITLAB'];
-const TOKEN_PATH = './secure/token.json';
+import type { Menu } from '../main/menu.js';
+import { Entry } from '@napi-rs/keyring';
+import { CLIENT_ID_GITLAB, KEYRING_SERVICE } from '../utils/config.js';
 
 export class GitLabService {
-  private get menu(): Menu {
-    return new Menu();
-  }
+  constructor(
+    private readonly menu: Menu,
+    private readonly utils: Utils,
+  ) {}
 
   //-------------- GitLab Login --------------------
   private async requestGitLabToken(deviceCode: string) {
@@ -22,7 +20,7 @@ export class GitLabService {
         Accept: 'application/json',
       },
       body: JSON.stringify({
-        client_id: clientIdGitLab,
+        client_id: CLIENT_ID_GITLAB,
         device_code: deviceCode,
         grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
       }),
@@ -39,7 +37,7 @@ export class GitLabService {
         throw new Error('It seems like the session expired. Please try again');
       }
 
-      await wait(5000);
+      await this.utils.wait(5000);
 
       const data = await this.requestGitLabToken(deviceCode);
 
@@ -60,7 +58,7 @@ export class GitLabService {
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
-      body: JSON.stringify({ client_id: clientIdGitLab }),
+      body: JSON.stringify({ client_id: CLIENT_ID_GITLAB }),
     })
       .then((res) => res.json())
       .then(async (data) => {
@@ -72,8 +70,7 @@ export class GitLabService {
         console.log('Please go to ' + verificationUri + ' and enter your Code ' + userCode);
 
         const labToken = await this.pollForGitLabToken(deviceCode, expiresIn);
-        fs.writeFileSync(TOKEN_PATH, JSON.stringify({ gitlab_token: labToken }));
-
+        new Entry(KEYRING_SERVICE, 'gitlab_token').setPassword(labToken);
         const spinner = ora('Menu is loading...').start();
 
         try {
@@ -85,7 +82,7 @@ export class GitLabService {
           process.exit(1);
         }
       })
-      .catch((error) => logError(error));
+      .catch((error) => this.utils.logError(error));
   }
 
   // ----------- GitLab Menu ------------------

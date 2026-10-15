@@ -1,6 +1,6 @@
 import inquirer from 'inquirer';
-import { GitHubService } from '../api/github-service.js';
-import { GitLabService } from '../api/gitlab-service.js';
+import type { GitHubService } from '../api/github-service.js';
+import type { GitLabService } from '../api/gitlab-service.js';
 
 const loadGitHubOrganization = [
   {
@@ -19,8 +19,13 @@ const loadGitLabGroup = [
 ];
 
 export class Menu {
-  private readonly hubService = new GitHubService();
-  private readonly labService = new GitLabService();
+  private hubService!: GitHubService;
+  private labService!: GitLabService;
+
+  setServices(hubService: GitHubService, labService: GitLabService) {
+    this.hubService = hubService;
+    this.labService = labService;
+  }
 
   openMainMenu(provider: string, token: string) {
     console.clear();

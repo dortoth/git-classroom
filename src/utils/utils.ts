@@ -1,50 +1,53 @@
-import fs from 'fs';
+import ora from 'ora';
+import { Entry } from '@napi-rs/keyring';
+import { KEYRING_SERVICE } from './config.js';
 
-const TOKEN_PATH = './secure/token.json';
+export const spinner = ora();
 
-export function wait(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+export class Utils {
+  wait(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
 
-export function centerText(length: number, terminalWidth: number) {
-  return Math.max(0, Math.floor((terminalWidth - length) / 2));
-}
+  centerText(length: number, terminalWidth: number) {
+    return Math.max(0, Math.floor((terminalWidth - length) / 2));
+  }
 
-export function logError(error: any) {
-  console.log('Something went wrong...');
-  console.log('Please try again!');
-  console.log(error);
-}
+  logError(error: any) {
+    console.log('Something went wrong...');
+    console.log('Please try again!');
+    console.log(error);
+  }
 
-export async function doesTokenExist(platform: string) {
-  let tokenData;
+  private readToken(account: string) {
+    try {
+      return new Entry(KEYRING_SERVICE, account).getPassword();
+    } catch {
+      return null;
+    }
+  }
 
-  try {
-    const rawData = fs.readFileSync(TOKEN_PATH, 'utf8');
-    tokenData = JSON.parse(rawData);
-  } catch {
+  async doesTokenExist(platform: string) {
+    if (platform === 'GitHub') {
+      const token = this.readToken('github_token');
+      if (!token) return null;
+
+      const response = await fetch('https://api.github.com/user', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      return response.status === 200 ? token : null;
+    } else if (platform === 'GitLab') {
+      const token = this.readToken('gitlab_token');
+      if (!token) return null;
+
+      const response = await fetch('https://gitlab.com/api/v4/user', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      return response.status === 200 ? token : null;
+    }
+
     return null;
   }
-
-  if (platform === 'GitHub') {
-    const token = tokenData.github_token;
-    if (!token) return null;
-
-    const response = await fetch('https://api.github.com/user', {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    return response.status === 200 ? token : null;
-  } else if (platform === 'GitLab') {
-    const token = tokenData.gitlab_token;
-    if (!token) return null;
-
-    const response = await fetch('https://gitlab.com/api/v4/user', {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    return response.status === 200 ? token : null;
-  }
-
-  return null;
 }
