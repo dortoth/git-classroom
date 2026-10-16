@@ -1,6 +1,5 @@
 import type { Utils } from '../utils/utils.js';
-import ora from 'ora';
-import dotenv from 'dotenv';
+import { spinner } from '../utils/utils.js';
 import type { Menu } from '../main/menu.js';
 import inquirer from 'inquirer';
 import { Entry } from '@napi-rs/keyring';
@@ -66,6 +65,7 @@ export class GitHubService {
         const userCode = data.user_code;
         const deviceCode = data.device_code;
         const expiresIn = data.expires_in;
+        spinner.info();
         console.log(
           'Please go to  https://github.com/login/device and enter your Code ' + userCode,
         );
@@ -73,7 +73,7 @@ export class GitHubService {
         const hubToken = await this.pollForGitHubToken(deviceCode, expiresIn);
         new Entry(KEYRING_SERVICE, 'github_token').setPassword(hubToken);
 
-        const spinner = ora('Menu is loading...').start();
+        spinner.start('Menu is loading...');
 
         try {
           await this.menu.openMainMenu('GitHub', hubToken);

@@ -78,10 +78,6 @@ export class Login {
   }
 
   private async isGitInstalled() {
-    console.log('Lets see if Git is installed');
-    spinner.start('Searching for Git..');
-    await this.utils.wait(2000);
-
     try {
       await execa`git --version`;
     } catch {
@@ -91,11 +87,6 @@ export class Login {
       await this.utils.wait(3000);
       process.exit(1);
     }
-
-    spinner.succeed('Git found!');
-    await this.utils.wait(2000);
-
-    console.clear();
     this.continueProcess();
   }
 
@@ -103,11 +94,8 @@ export class Login {
     inquirer
       .prompt(continueQuestion)
       .then(async () => {
-        spinner.start('Login is loading...');
-
         try {
           await this.loginProcess();
-          spinner.succeed('Successfully loaded');
         } catch {
           console.log('Something went wrong...');
           spinner.fail('Please try again!');
@@ -120,18 +108,18 @@ export class Login {
   }
 
   private async loginProcess() {
-    await this.utils.wait(3000);
-
     console.clear();
 
     inquirer
       .prompt(loginQuestion)
       .then(async (answer) => {
+        spinner.start('Started login process...');
         if (answer['loginOptions'] === 'GitHub') {
           const existingToken = await this.utils.doesTokenExist('GitHub');
 
           if (existingToken) {
             await this.menu.openMainMenu(answer['loginOptions'], existingToken);
+            spinner.succeed('Login sucessfull');
           } else {
             this.hubService.loginIntoGitHub();
           }
@@ -140,11 +128,12 @@ export class Login {
 
           if (existingToken) {
             await this.menu.openMainMenu(answer['loginOptions'], existingToken);
+            spinner.succeed('Login sucessfull');
           } else {
             this.labService.loginIntoGitLab();
           }
         } else {
-          console.log('Sorry we only support the other two platforms.');
+          console.log('Sorry we only support these two platforms.');
         }
       })
       .catch((error) => {

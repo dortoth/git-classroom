@@ -1,6 +1,5 @@
 import type { Utils } from '../utils/utils.js';
-import ora from 'ora';
-import dotenv from 'dotenv';
+import { spinner } from '../utils/utils.js';
 import type { Menu } from '../main/menu.js';
 import { Entry } from '@napi-rs/keyring';
 import { CLIENT_ID_GITLAB, KEYRING_SERVICE } from '../utils/config.js';
@@ -67,11 +66,12 @@ export class GitLabService {
         const verificationUri = data.verification_uri;
         const expiresIn = data.expires_in;
 
+        spinner.info();
         console.log('Please go to ' + verificationUri + ' and enter your Code ' + userCode);
 
         const labToken = await this.pollForGitLabToken(deviceCode, expiresIn);
         new Entry(KEYRING_SERVICE, 'gitlab_token').setPassword(labToken);
-        const spinner = ora('Menu is loading...').start();
+        spinner.start('Menu is loading...');
 
         try {
           await this.menu.openMainMenu('GitLab', labToken);
