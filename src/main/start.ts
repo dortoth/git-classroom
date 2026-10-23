@@ -7,7 +7,7 @@ import { GitLabService } from '../api/gitlab-service.js';
 import { Utils } from '../utils/utils.js';
 
 const utils = new Utils();
-const menu = new Menu();
+const menu = new Menu(utils);
 const hubService = new GitHubService(menu, utils);
 const labService = new GitLabService(menu, utils);
 menu.setServices(hubService, labService);

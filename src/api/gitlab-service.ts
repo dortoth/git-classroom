@@ -51,38 +51,40 @@ export class GitLabService {
   }
 
   async loginIntoGitLab() {
-    fetch('https://gitlab.com/oauth/authorize_device', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      body: JSON.stringify({ client_id: CLIENT_ID_GITLAB }),
-    })
-      .then((res) => res.json())
-      .then(async (data) => {
-        const deviceCode = data.device_code;
-        const userCode = data.user_code;
-        const verificationUri = data.verification_uri;
-        const expiresIn = data.expires_in;
+    try {
+      const res = await fetch('https://gitlab.com/oauth/authorize_device', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({ client_id: CLIENT_ID_GITLAB }),
+      });
+      const data = await res.json();
 
-        spinner.info();
-        console.log('Please go to ' + verificationUri + ' and enter your Code ' + userCode);
+      const deviceCode = data.device_code;
+      const userCode = data.user_code;
+      const verificationUri = data.verification_uri;
+      const expiresIn = data.expires_in;
 
-        const labToken = await this.pollForGitLabToken(deviceCode, expiresIn);
-        new Entry(KEYRING_SERVICE, 'gitlab_token').setPassword(labToken);
-        spinner.start('Menu is loading...');
+      spinner.info();
+      console.log('Please go to ' + verificationUri + ' and enter your Code ' + userCode);
 
-        try {
-          await this.menu.openMainMenu('GitLab', labToken);
-          spinner.succeed('Login successful.');
-        } catch {
-          console.log('Something went wrong...');
-          spinner.fail('Please try again!');
-          process.exit(1);
-        }
-      })
-      .catch((error) => this.utils.logError(error));
+      const labToken = await this.pollForGitLabToken(deviceCode, expiresIn);
+      new Entry(KEYRING_SERVICE, 'gitlab_token').setPassword(labToken);
+      spinner.start('Menu is loading...');
+
+      try {
+        await this.menu.openMainMenu('GitLab', labToken);
+        spinner.succeed('Login successful.');
+      } catch {
+        console.log('Something went wrong...');
+        spinner.fail('Please try again!');
+        process.exit(1);
+      }
+    } catch (error) {
+      this.utils.logError(error);
+    }
   }
 
   // ----------- GitLab Menu ------------------

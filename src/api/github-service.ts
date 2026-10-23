@@ -5,6 +5,27 @@ import inquirer from 'inquirer';
 import { Entry } from '@napi-rs/keyring';
 import { CLIENT_ID_GITHUB, KEYRING_SERVICE } from '../utils/config.js';
 
+const manageMembersOptions = [
+  {
+    type: 'rawlist',
+    name: 'manageMembersOptions',
+    message: 'What would you like to do?',
+    choices: [
+      { name: 'List organization memebers', value: 'lom' },
+      { name: 'Create an organization invitation', value: 'coi' },
+      { name: 'Remove an organization member', value: 'rom' },
+    ],
+  },
+];
+
+const returnToMainMenu = [
+  {
+    type: 'confirm',
+    name: 'proceed',
+    message: 'Would you like to return to the main menu? Press enter.',
+  },
+];
+
 export class GitHubService {
   constructor(
     private readonly menu: Menu,
@@ -52,78 +73,138 @@ export class GitHubService {
   }
 
   async loginIntoGitHub() {
-    fetch('https://github.com/login/device/code', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      body: JSON.stringify({ client_id: CLIENT_ID_GITHUB, scope: 'admin:org' }),
-    })
-      .then((res) => res.json())
-      .then(async (data) => {
-        const userCode = data.user_code;
-        const deviceCode = data.device_code;
-        const expiresIn = data.expires_in;
-        spinner.info();
-        console.log(
-          'Please go to  https://github.com/login/device and enter your Code ' + userCode,
-        );
+    try {
+      const res = await fetch('https://github.com/login/device/code', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({ client_id: CLIENT_ID_GITHUB, scope: 'admin:org' }),
+      });
+      const data = await res.json();
 
-        const hubToken = await this.pollForGitHubToken(deviceCode, expiresIn);
-        new Entry(KEYRING_SERVICE, 'github_token').setPassword(hubToken);
+      const userCode = data.user_code;
+      const deviceCode = data.device_code;
+      const expiresIn = data.expires_in;
+      spinner.info();
+      console.log('Please go to  https://github.com/login/device and enter your Code ' + userCode);
 
-        spinner.start('Menu is loading...');
+      const hubToken = await this.pollForGitHubToken(deviceCode, expiresIn);
+      new Entry(KEYRING_SERVICE, 'github_token').setPassword(hubToken);
 
-        try {
-          await this.menu.openMainMenu('GitHub', hubToken);
-          spinner.succeed('Login successful.');
-        } catch {
-          console.log('Something went wrong...');
-          spinner.fail('Please try again!');
-          process.exit(1);
-        }
-      })
-      .catch((error) => this.utils.logError(error));
+      spinner.start('Menu is loading...');
+
+      try {
+        await this.menu.openMainMenu('GitHub', hubToken);
+        spinner.succeed('Login successful.');
+      } catch {
+        console.log('Something went wrong...');
+        spinner.fail('Please try again!');
+        process.exit(1);
+      }
+    } catch (error) {
+      this.utils.logError(error);
+    }
   }
 
   // ----------- GitHub Menu ------------------
   async loadExisitingGitHubOrganization(token: string) {
-    fetch('https://api.github.com/user/orgs', {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        Accept: 'application/vnd.github+json',
-      },
-    })
-      .then((res) => {
-        if (!res.ok) {
-          console.log('Something went wrong...');
-          process.exit(1);
-        } else {
-          return res.json();
-        }
-      })
-      .then(async (data) => {
-        if (data.length === 0) {
-          console.log('Sorry there exist no organization. Please add one!');
-          process.exit(1);
-        } else {
-          console.clear();
-          await inquirer
-            .prompt([
-              {
-                type: 'select',
-                name: 'organization',
-                message: 'Select a GitHub organization:',
-                choices: data.map((org: { login: string }) => org.login),
-              },
-            ])
-            .then(async (answer) => {
-              await this.menu.openGitHubOrganizationMenu(token, answer.organization);
-            });
-        }
+    let res: Response;
+    try {
+      res = await fetch('https://api.github.com/user/orgs', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          Accept: 'application/vnd.github+json',
+        },
       });
+    } catch {
+      console.log('Network error. Please check your internet connection.');
+      process.exit(1);
+    }
+    if (!res.ok) {
+      console.log('Something went wrong...');
+      process.exit(1);
+    }
+    const data = await res.json();
+
+    if (data.length === 0) {
+      console.log('Sorry there exist no organization. Please add one!');
+      process.exit(1);
+    } else {
+      console.clear();
+      await inquirer
+        .prompt([
+          {
+            type: 'select',
+            name: 'organization',
+            message: 'Select a GitHub organization:',
+            choices: data.map((org: { login: string }) => org.login),
+          },
+        ])
+        .then(async (answer) => {
+          await this.menu.openGitHubOrganizationMenu(token, answer.organization);
+        });
+    }
   }
+
+  // Create an organization invitation ->  dort kann man eine role mitgeben dh.
+  // man zuerst einen Dialog machen ob der User ein Admin sein sollte oder nicht dann die jeweilige Rolle mitschicken
+  //und es geht nur für eine Person
+  // Remove an organization member
+  async manageMembers(orgToken: string, orgName: string) {
+    await inquirer.prompt(manageMembersOptions).then(async (answer) => {
+      if (answer['manageMembersOptions'] == 'lom') {
+        await this.listOrgaMembers(orgToken, orgName);
+      } else if (answer['manageMembersOptions'] == 'coi') {
+      } else {
+      }
+    });
+  }
+
+  private async listOrgaMembers(orgToken: string, orgName: string) {
+    let responseOrgaList: Response;
+    try {
+      responseOrgaList = await fetch(
+        `https://api.github.com/orgs/${orgName}/members?per_page=100`,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${orgToken}`,
+            Accept: 'application/vnd.github+json',
+          },
+        },
+      );
+    } catch {
+      console.log('Network error. Please check your internet connection.');
+      await this.utils.wait(3000);
+      return await this.menu.openGitHubOrganizationMenu(orgToken, orgName);
+    }
+
+    if (!responseOrgaList.ok) {
+      await this.utils.logError(`${responseOrgaList.status} ${responseOrgaList.statusText}`);
+      await this.utils.wait(3000);
+      return await this.menu.openGitHubOrganizationMenu(orgToken, orgName);
+    }
+    const dataOrgaList: { login: string }[] = await responseOrgaList.json();
+
+    console.clear();
+    console.table(dataOrgaList.map((member) => ({ Username: member.login })));
+    console.log('\n\n');
+
+    await inquirer.prompt(returnToMainMenu).then((answer) => {
+      if (answer['loadOrg'] === true) {
+        this.menu.openGitHubOrganizationMenu(orgToken, orgName);
+      } else {
+        console.log('The program will be terminated now.');
+        process.exit(0);
+      }
+    });
+  }
+
+  async createClassroom() {}
+  async createTemplateRepository() {}
+  async createAssignment() {}
 }
