@@ -16,7 +16,7 @@ export const GITLAB_LOGIN: ILogin = {
   tokenUrl: 'https://gitlab.com/oauth/token',
 };
 
-export const LOGINS: Record<string, ILogin> = {
+export const PLATFORM_LOGINS: Record<string, ILogin> = {
   GitHub: GITHUB_LOGIN,
   GitLab: GITLAB_LOGIN,
 };

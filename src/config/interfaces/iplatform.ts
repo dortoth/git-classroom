@@ -1,5 +1,5 @@
-export interface Platform {
+export interface IPlatform {
   provider: string;
   token: string;
-  teamsUrl: string;
+  teamsUrl?: string;
 }

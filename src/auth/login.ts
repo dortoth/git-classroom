@@ -3,10 +3,12 @@ import * as util from '../utils/utils.js';
 import type { GitHubService } from '../services/github-service.js';
 import type { GitLabService } from '../services/gitlab-service.js';
 import type { Menu } from '../menus/menu.js';
-import { CheckToken } from './checkToken.js';
+import { TokenManagement } from './tokenManagement.js';
 import * as iP from '../utils/inquirerPrompt.js';
-import { GITHUB_LOGIN, GITLAB_LOGIN, KEYRING_SERVICE, LOGINS } from '../config/config.js';
+import { GITHUB_LOGIN, GITLAB_LOGIN, KEYRING_SERVICE, PLATFORM_LOGINS } from '../config/config.js';
 import { Entry } from '@napi-rs/keyring';
+import type { ILogin } from '../config/interfaces/ilogin.js';
+import type { IPlatform } from '../config/interfaces/iplatform.js';
 
 export class Login {
   constructor(
@@ -14,7 +16,7 @@ export class Login {
     private readonly labService: GitLabService,
     private readonly utils: util.Utils,
     private readonly menu: Menu,
-    private readonly checkToken: CheckToken,
+    private readonly tokenManagement: TokenManagement,
   ) {}
 
   renderFiglet(
@@ -97,45 +99,70 @@ export class Login {
       util.spinner.start('Started login process...');
 
       const provider = answer['loginOptions'];
-      const login = LOGINS[provider];
+      const platformLogins = PLATFORM_LOGINS[provider];
 
-      if (!login) {
+      if (!platformLogins) {
         console.log('Sorry we only support these two platforms.');
         return;
       }
 
-      const existingToken = await this.checkToken.doesTokenExist(login);
+      const existingToken = await this.tokenManagement.doesTokenExist(platformLogins);
 
       if (existingToken) {
-        await this.menu.openMainMenu(provider, existingToken);
+        await this.menu.openMainMenu(existingToken);
         util.spinner.succeed('Login successful');
-      } else if (provider === 'GitHub') {
-        await this.loginGitHubOrLab();
       } else {
-        // await this.loginIntoGitLab();
+        await this.loginGitHubOrLab(platformLogins);
       }
     } catch (error) {
       this.utils.logError(error);
     }
   }
 
-  async loginGitHubOrLab() {
+  async loginGitHubOrLab(platformLogins: ILogin) {
+    let token = '';
+    let platfromMenu: IPlatform;
     try {
-      const data = await this.hubService.gitHubLoginApi();
-      const userCode = data.user_code;
-      const deviceCode = data.device_code;
-      const expiresIn = data.expires_in;
-      util.spinner.info();
-      console.log('Please go to  https://github.com/login/device and enter your Code ' + userCode);
+      if (platformLogins === GITHUB_LOGIN) {
+        const data = await this.hubService.githubLoginApi();
+        const userCode = data.user_code;
+        const deviceCode = data.device_code;
+        const expiresIn = data.expires_in;
+        util.spinner.info();
+        console.log(
+          'Please go to  https://github.com/login/device and enter your Code ' + userCode,
+        );
 
-      const hubToken = await this.hubService.pollForGitHubToken(deviceCode, expiresIn);
-      new Entry(KEYRING_SERVICE, 'github_token').setPassword(hubToken);
+        token = await this.tokenManagement.pollForToken(platformLogins, deviceCode, expiresIn);
+
+        platfromMenu = {
+          provider: 'GitHub',
+          token: token,
+        };
+        new Entry(KEYRING_SERVICE, 'github_token').setPassword(token);
+      } else {
+        const data = await this.labService.gitlabLoginApi();
+        const deviceCode = data.device_code;
+        const userCode = data.user_code;
+        const verificationUri = data.verification_uri;
+        const expiresIn = data.expires_in;
+
+        util.spinner.info();
+        console.log('Please go to ' + verificationUri + ' and enter your Code ' + userCode);
+
+        token = await this.tokenManagement.pollForToken(platformLogins, deviceCode, expiresIn);
+        new Entry(KEYRING_SERVICE, 'gitlab_token').setPassword(token);
+
+        platfromMenu = {
+          provider: 'GitLab',
+          token: token,
+        };
+      }
 
       util.spinner.start('Menu is loading...');
-
       try {
         util.spinner.succeed('Login successful.');
-        await this.menu.openMainMenu('GitHub', hubToken);
+        await this.menu.openMainMenu(platfromMenu);
       } catch {
         console.log('Something went wrong...');
         util.spinner.fail('Please try again!');

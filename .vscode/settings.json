@@ -1,5 +1,7 @@
 {
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,
+  "prettier.documentSelectors": ["**/*"],
+  "prettier.enableDebugLogs": true,
   "prettier.requireConfig": true
 }

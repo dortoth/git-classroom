@@ -5,14 +5,20 @@ import { Menu } from './menus/menu.js';
 import { GitHubService } from './services/github-service.js';
 import { GitLabService } from './services/gitlab-service.js';
 import { Utils } from './utils/utils.js';
-import { CheckToken } from './auth/checkToken.js';
+import { TokenManagement } from './auth/tokenManagement.js';
 
 const utils = new Utils();
 const menu = new Menu(utils);
-const hubService = new GitHubService(menu, utils);
-const labService = new GitLabService(menu, utils);
+const hubService = new GitHubService();
+const labService = new GitLabService();
 menu.setServices(hubService, labService);
 
-const login = new Login(hubService, labService, utils, menu, new CheckToken());
+const login = new Login(
+  hubService,
+  labService,
+  utils,
+  menu,
+  new TokenManagement(hubService, labService, utils),
+);
 
 login.startProgram();

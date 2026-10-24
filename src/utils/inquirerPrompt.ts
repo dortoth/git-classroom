@@ -1,16 +1,8 @@
-export const loadGitHubOrganization = [
+export const loadTeams = [
   {
     type: 'confirm',
-    name: 'loadOrg',
-    message: 'Would you like to load your organization?',
-  },
-];
-
-export const loadGitLabGroup = [
-  {
-    type: 'confirm',
-    name: 'loadGrp',
-    message: 'Would you like to load your group?',
+    name: 'loadTeams',
+    message: 'Would you like to load your teams?',
   },
 ];
 

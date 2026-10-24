@@ -1,3 +1,5 @@
+import axios from 'axios';
+import type { IPlatform } from '../config/interfaces/iplatform.js';
 import type { GitHubService } from '../services/github-service.js';
 import type { GitLabService } from '../services/gitlab-service.js';
 import * as iP from '../utils/inquirerPrompt.js';
@@ -14,46 +16,108 @@ export class Menu {
     this.labService = labService;
   }
 
-  openMainMenu(provider: string, token: string) {
+  openMainMenu(platform: IPlatform) {
     console.clear();
+    util.inquirer.prompt(iP.loadTeams).then((answer) => {
+      if (answer['loadOrg'] !== true) {
+        process.exit(0);
+      }
+      this.loadExisitingTeams(platform);
+    });
+  }
 
-    if (provider === 'GitHub') {
-      util.inquirer.prompt(iP.loadGitHubOrganization).then((answer) => {
-        if (answer['loadOrg'] !== true) {
-          process.exit(0);
+  async loadExisitingTeams(platform: IPlatform) {
+    let data;
+    if (platform.provider === 'GitHub') {
+      data = await this.hubService.loadGithubOrganization(platform.token);
+      if (data.length === 0) {
+        console.log('Sorry there exist no organization. Please add one!');
+        process.exit(1);
+      } else {
+        //for gitlab
+        if (data.length === 0) {
+          console.log('Sorry there exist no group. Please add one!');
+          process.exit(1);
         }
-        this.hubService.loadExisitingGitHubOrganization(token);
-      });
-    } else {
-      util.inquirer.prompt(iP.loadGitLabGroup).then((answer) => {
-        if (answer['loadGrp'] !== true) {
-          process.exit(0);
-        }
-        this.labService.loadExisitingGitLabGroup();
-      });
+      }
+
+      console.clear();
+      await util.inquirer
+        .prompt([
+          {
+            type: 'select',
+            name: 'organization',
+            message: 'Select a Team:',
+            choices: data.map((team: { login: string }) => team.login),
+          },
+        ])
+        .then(async (answer) => {
+          await this.openTeamMenu(platform);
+        });
     }
   }
 
   // createClassroom (das Repo mit den Metadaten, also Roster und Assignments)
   // createTemplateRepository
   // createAssignment (aus dem Template ein Repo pro Studierendem)
-  openGitHubOrganizationMenu(orgName: string, orgToken: string) {
+  openTeamMenu(platform: IPlatform) {
     console.clear();
     util.inquirer
       .prompt(iP.menuQuestion)
       .then(async (answer) => {
         if (answer['menuOptions'] == 'mom') {
-          this.hubService.manageMembers(orgName, orgToken);
+          this.manageMembers(platform);
         } else if (answer['menuOptions'] == 'cc') {
-          this.hubService.createClassroom();
+          this.createClassroom();
         } else if (answer['menuOptions'] == 'ctp') {
-          this.hubService.createTemplateRepository();
+          this.createTemplateRepository();
         } else {
-          this.hubService.createAssignment();
+          this.createAssignment();
         }
       })
       .catch((error) => {
         this.utils.logError(error);
       });
   }
+
+  async manageMembers(platform: IPlatform) {
+    await util.inquirer.prompt(iP.manageMembersOptions).then(async (answer) => {
+      if (answer['manageMembersOptions'] == 'lom') {
+        await this.listTeamMembers(platform);
+      } else if (answer['manageMembersOptions'] == 'coi') {
+      } else {
+      }
+    });
+  }
+
+  private async listTeamMembers(platform: IPlatform) {
+    let dataOrgaList: { login: string }[];
+    try {
+      dataOrgaList = await this.hubService.listOrgaMembers(platform);
+    } catch (error) {
+      const message = axios.isAxiosError(error)
+        ? `${error.response?.status} ${error.response?.statusText}`
+        : error;
+      this.utils.logError(message);
+      await this.utils.wait(3000);
+      return this.openTeamMenu(platform);
+    }
+
+    console.clear();
+    console.table(dataOrgaList.map((member) => ({ Username: member.login })));
+    console.log('\n');
+
+    await util.inquirer.prompt(iP.returnToMainMenu).then((answer) => {
+      if (answer['loadOrg'] === true) {
+        this.openTeamMenu(platform);
+      } else {
+        console.log('The program will be terminated now.');
+        process.exit(0);
+      }
+    });
+  }
+
+  async createClassroom() {}
+  async createTemplateRepository() {}
+  async createAssignment() {}
 }
