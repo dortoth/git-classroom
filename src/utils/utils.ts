@@ -1,6 +1,9 @@
 import ora from 'ora';
-import { Entry } from '@napi-rs/keyring';
-import { KEYRING_SERVICE } from './config.js';
+export { default as inquirer } from 'inquirer';
+export { default as colors } from 'picocolors';
+export { default as figlet } from 'figlet';
+export { default as alignText } from 'align-text';
+export { execa } from 'execa';
 
 export const spinner = ora();
 
@@ -17,37 +20,5 @@ export class Utils {
     console.log('Something went wrong...');
     console.log('Please try again!');
     console.log(error);
-  }
-
-  private readToken(account: string) {
-    try {
-      return new Entry(KEYRING_SERVICE, account).getPassword();
-    } catch {
-      return null;
-    }
-  }
-
-  async doesTokenExist(platform: string) {
-    if (platform === 'GitHub') {
-      const token = this.readToken('github_token');
-      if (!token) return null;
-
-      const response = await fetch('https://api.github.com/user', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      return response.status === 200 ? token : null;
-    } else if (platform === 'GitLab') {
-      const token = this.readToken('gitlab_token');
-      if (!token) return null;
-
-      const response = await fetch('https://gitlab.com/api/v4/user', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      return response.status === 200 ? token : null;
-    }
-
-    return null;
   }
 }

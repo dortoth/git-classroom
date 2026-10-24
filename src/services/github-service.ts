@@ -1,35 +1,13 @@
-import type { Utils } from '../utils/utils.js';
-import { spinner } from '../utils/utils.js';
-import type { Menu } from '../main/menu.js';
-import inquirer from 'inquirer';
+import * as util from '../utils/utils.js';
+import * as iP from '../utils/inquirerPrompt.js';
+import type { Menu } from '../menus/menu.js';
 import { Entry } from '@napi-rs/keyring';
-import { CLIENT_ID_GITHUB, KEYRING_SERVICE } from '../utils/config.js';
-
-const manageMembersOptions = [
-  {
-    type: 'rawlist',
-    name: 'manageMembersOptions',
-    message: 'What would you like to do?',
-    choices: [
-      { name: 'List organization memebers', value: 'lom' },
-      { name: 'Create an organization invitation', value: 'coi' },
-      { name: 'Remove an organization member', value: 'rom' },
-    ],
-  },
-];
-
-const returnToMainMenu = [
-  {
-    type: 'confirm',
-    name: 'proceed',
-    message: 'Would you like to return to the main menu? Press enter.',
-  },
-];
+import { CLIENT_ID_GITHUB, KEYRING_SERVICE } from '../config/config.js';
 
 export class GitHubService {
   constructor(
     private readonly menu: Menu,
-    private readonly utils: Utils,
+    private readonly utils: util.Utils,
   ) {}
 
   //-------------- GitHub Login --------------------
@@ -87,20 +65,20 @@ export class GitHubService {
       const userCode = data.user_code;
       const deviceCode = data.device_code;
       const expiresIn = data.expires_in;
-      spinner.info();
+      util.spinner.info();
       console.log('Please go to  https://github.com/login/device and enter your Code ' + userCode);
 
       const hubToken = await this.pollForGitHubToken(deviceCode, expiresIn);
       new Entry(KEYRING_SERVICE, 'github_token').setPassword(hubToken);
 
-      spinner.start('Menu is loading...');
+      util.spinner.start('Menu is loading...');
 
       try {
+        util.spinner.succeed('Login successful.');
         await this.menu.openMainMenu('GitHub', hubToken);
-        spinner.succeed('Login successful.');
       } catch {
         console.log('Something went wrong...');
-        spinner.fail('Please try again!');
+        util.spinner.fail('Please try again!');
         process.exit(1);
       }
     } catch (error) {
@@ -135,7 +113,7 @@ export class GitHubService {
       process.exit(1);
     } else {
       console.clear();
-      await inquirer
+      await util.inquirer
         .prompt([
           {
             type: 'select',
@@ -155,7 +133,7 @@ export class GitHubService {
   //und es geht nur für eine Person
   // Remove an organization member
   async manageMembers(orgToken: string, orgName: string) {
-    await inquirer.prompt(manageMembersOptions).then(async (answer) => {
+    await util.inquirer.prompt(iP.manageMembersOptions).then(async (answer) => {
       if (answer['manageMembersOptions'] == 'lom') {
         await this.listOrgaMembers(orgToken, orgName);
       } else if (answer['manageMembersOptions'] == 'coi') {
@@ -194,7 +172,7 @@ export class GitHubService {
     console.table(dataOrgaList.map((member) => ({ Username: member.login })));
     console.log('\n\n');
 
-    await inquirer.prompt(returnToMainMenu).then((answer) => {
+    await util.inquirer.prompt(iP.returnToMainMenu).then((answer) => {
       if (answer['loadOrg'] === true) {
         this.menu.openGitHubOrganizationMenu(orgToken, orgName);
       } else {

@@ -2,12 +2,12 @@
   "name": "git-classroom",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/main/start.js",
+  "main": "dist/start.js",
   "scripts": {
     "build": "tsc"
   },
   "bin": {
-    "git-classroom": "dist/main/start.js"
+    "git-classroom": "dist/start.js"
   },
   "keywords": [],
   "author": "",

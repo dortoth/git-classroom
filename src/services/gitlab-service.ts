@@ -1,8 +1,8 @@
 import type { Utils } from '../utils/utils.js';
 import { spinner } from '../utils/utils.js';
-import type { Menu } from '../main/menu.js';
+import type { Menu } from '../menus/menu.js';
 import { Entry } from '@napi-rs/keyring';
-import { CLIENT_ID_GITLAB, KEYRING_SERVICE } from '../utils/config.js';
+import { CLIENT_ID_GITLAB, KEYRING_SERVICE } from '../config/config.js';
 
 export class GitLabService {
   constructor(
@@ -75,8 +75,8 @@ export class GitLabService {
       spinner.start('Menu is loading...');
 
       try {
-        await this.menu.openMainMenu('GitLab', labToken);
         spinner.succeed('Login successful.');
+        await this.menu.openMainMenu('GitLab', labToken);
       } catch {
         console.log('Something went wrong...');
         spinner.fail('Please try again!');
