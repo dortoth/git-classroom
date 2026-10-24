@@ -15,3 +15,8 @@ export const GITLAB_LOGIN: ILogin = {
   deviceCodeUrl: 'https://gitlab.com/oauth/authorize_device',
   tokenUrl: 'https://gitlab.com/oauth/token',
 };
+
+export const LOGINS: Record<string, ILogin> = {
+  GitHub: GITHUB_LOGIN,
+  GitLab: GITLAB_LOGIN,
+};

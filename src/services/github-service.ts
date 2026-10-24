@@ -10,8 +10,6 @@ export class GitHubService {
     private readonly utils: util.Utils,
   ) {}
 
-  //-------------- GitHub Login --------------------
-
   private async requestGitHubToken(deviceCode: string) {
     const response = await fetch('https://github.com/login/oauth/access_token', {
       method: 'POST',
@@ -50,40 +48,16 @@ export class GitHubService {
     }
   }
 
-  async loginIntoGitHub() {
-    try {
-      const res = await fetch('https://github.com/login/device/code', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({ client_id: CLIENT_ID_GITHUB, scope: 'admin:org' }),
-      });
-      const data = await res.json();
-
-      const userCode = data.user_code;
-      const deviceCode = data.device_code;
-      const expiresIn = data.expires_in;
-      util.spinner.info();
-      console.log('Please go to  https://github.com/login/device and enter your Code ' + userCode);
-
-      const hubToken = await this.pollForGitHubToken(deviceCode, expiresIn);
-      new Entry(KEYRING_SERVICE, 'github_token').setPassword(hubToken);
-
-      util.spinner.start('Menu is loading...');
-
-      try {
-        util.spinner.succeed('Login successful.');
-        await this.menu.openMainMenu('GitHub', hubToken);
-      } catch {
-        console.log('Something went wrong...');
-        util.spinner.fail('Please try again!');
-        process.exit(1);
-      }
-    } catch (error) {
-      this.utils.logError(error);
-    }
+  async gitHubLoginApi() {
+    const res = await fetch('https://github.com/login/device/code', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({ client_id: CLIENT_ID_GITHUB, scope: 'admin:org' }),
+    });
+    return await res.json();
   }
 
   // ----------- GitHub Menu ------------------

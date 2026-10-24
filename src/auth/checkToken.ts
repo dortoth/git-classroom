@@ -1,5 +1,6 @@
 import { Entry } from '@napi-rs/keyring';
-import { KEYRING_SERVICE } from '../config/config.js';
+import { GITHUB_LOGIN, GITLAB_LOGIN, KEYRING_SERVICE } from '../config/config.js';
+import type { ILogin } from '../config/interfaces/ilogin.js';
 
 export class CheckToken {
   private readToken(account: string) {
@@ -10,8 +11,8 @@ export class CheckToken {
     }
   }
 
-  async doesTokenExist(platform: string) {
-    if (platform === 'GitHub') {
+  async doesTokenExist(login: ILogin) {
+    if (login === GITHUB_LOGIN) {
       const token = this.readToken('github_token');
       if (!token) return null;
 
@@ -20,7 +21,7 @@ export class CheckToken {
       });
 
       return response.status === 200 ? token : null;
-    } else if (platform === 'GitLab') {
+    } else if (login === GITLAB_LOGIN) {
       const token = this.readToken('gitlab_token');
       if (!token) return null;
 

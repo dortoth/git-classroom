@@ -5,6 +5,8 @@ import type { GitLabService } from '../services/gitlab-service.js';
 import type { Menu } from '../menus/menu.js';
 import { CheckToken } from './checkToken.js';
 import * as iP from '../utils/inquirerPrompt.js';
+import { GITHUB_LOGIN, GITLAB_LOGIN, KEYRING_SERVICE, LOGINS } from '../config/config.js';
+import { Entry } from '@napi-rs/keyring';
 
 export class Login {
   constructor(
@@ -90,34 +92,57 @@ export class Login {
   private async loginProcess() {
     console.clear();
 
-    util.inquirer
-      .prompt(iP.loginQuestion)
-      .then(async (answer) => {
-        util.spinner.start('Started login process...');
-        if (answer['loginOptions'] === 'GitHub') {
-          const existingToken = await this.checkToken.doesTokenExist('GitHub');
+    try {
+      const answer = await util.inquirer.prompt(iP.loginQuestion);
+      util.spinner.start('Started login process...');
 
-          if (existingToken) {
-            await this.menu.openMainMenu(answer['loginOptions'], existingToken);
-            util.spinner.succeed('Login sucessfull');
-          } else {
-            this.hubService.loginIntoGitHub();
-          }
-        } else if (answer['loginOptions'] === 'GitLab') {
-          const existingToken = await this.checkToken.doesTokenExist('GitLab');
+      const provider = answer['loginOptions'];
+      const login = LOGINS[provider];
 
-          if (existingToken) {
-            await this.menu.openMainMenu(answer['loginOptions'], existingToken);
-            util.spinner.succeed('Login sucessfull');
-          } else {
-            this.labService.loginIntoGitLab();
-          }
-        } else {
-          console.log('Sorry we only support these two platforms.');
-        }
-      })
-      .catch((error) => {
-        this.utils.logError(error);
-      });
+      if (!login) {
+        console.log('Sorry we only support these two platforms.');
+        return;
+      }
+
+      const existingToken = await this.checkToken.doesTokenExist(login);
+
+      if (existingToken) {
+        await this.menu.openMainMenu(provider, existingToken);
+        util.spinner.succeed('Login successful');
+      } else if (provider === 'GitHub') {
+        await this.loginGitHubOrLab();
+      } else {
+        // await this.loginIntoGitLab();
+      }
+    } catch (error) {
+      this.utils.logError(error);
+    }
+  }
+
+  async loginGitHubOrLab() {
+    try {
+      const data = await this.hubService.gitHubLoginApi();
+      const userCode = data.user_code;
+      const deviceCode = data.device_code;
+      const expiresIn = data.expires_in;
+      util.spinner.info();
+      console.log('Please go to  https://github.com/login/device and enter your Code ' + userCode);
+
+      const hubToken = await this.hubService.pollForGitHubToken(deviceCode, expiresIn);
+      new Entry(KEYRING_SERVICE, 'github_token').setPassword(hubToken);
+
+      util.spinner.start('Menu is loading...');
+
+      try {
+        util.spinner.succeed('Login successful.');
+        await this.menu.openMainMenu('GitHub', hubToken);
+      } catch {
+        console.log('Something went wrong...');
+        util.spinner.fail('Please try again!');
+        process.exit(1);
+      }
+    } catch (error) {
+      this.utils.logError(error);
+    }
   }
 }
