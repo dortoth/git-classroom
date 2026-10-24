@@ -12,7 +12,7 @@ export const menuQuestion = [
     name: 'menuOptions',
     message: 'What would you like to do?',
     choices: [
-      { name: 'Manage organization members', value: 'mom' },
+      { name: 'Manage team members', value: 'mom' },
       { name: 'Create Classroom', value: 'cc' },
       { name: 'Create Template Repository', value: 'ctp' },
       { name: 'Create Assignment', value: 'ca' },
@@ -43,9 +43,9 @@ export const manageMembersOptions = [
     name: 'manageMembersOptions',
     message: 'What would you like to do?',
     choices: [
-      { name: 'List organization memebers', value: 'lom' },
-      { name: 'Create an organization invitation', value: 'coi' },
-      { name: 'Remove an organization member', value: 'rom' },
+      { name: 'List team members', value: 'lom' },
+      { name: 'Create an team invitation', value: 'coi' },
+      { name: 'Remove an team member', value: 'rom' },
     ],
   },
 ];

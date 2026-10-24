@@ -11,7 +11,7 @@ export const GITHUB_LOGIN: ILogin = {
 };
 
 export const GITLAB_LOGIN: ILogin = {
-  clientId: 'CLIENT_ID_GITLAB',
+  clientId: CLIENT_ID_GITLAB,
   deviceCodeUrl: 'https://gitlab.com/oauth/authorize_device',
   tokenUrl: 'https://gitlab.com/oauth/token',
 };

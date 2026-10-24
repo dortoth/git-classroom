@@ -19,7 +19,7 @@ export class Menu {
   openMainMenu(platform: IPlatform) {
     console.clear();
     util.inquirer.prompt(iP.loadTeams).then((answer) => {
-      if (answer['loadOrg'] !== true) {
+      if (answer['loadTeams'] !== true) {
         process.exit(0);
       }
       this.loadExisitingTeams(platform);
@@ -33,13 +33,14 @@ export class Menu {
       if (data.length === 0) {
         console.log('Sorry there exist no organization. Please add one!');
         process.exit(1);
-      } else {
-        //for gitlab
-        if (data.length === 0) {
-          console.log('Sorry there exist no group. Please add one!');
-          process.exit(1);
-        }
       }
+      //for gitlab
+      // else {
+      //
+      //   if (data.length === 0) {
+      //     console.log('Sorry there exist no group. Please add one!');
+      //     process.exit(1);
+      //   }
 
       console.clear();
       await util.inquirer
@@ -52,8 +53,13 @@ export class Menu {
           },
         ])
         .then(async (answer) => {
+          platform.teamsUrl = answer['organization'];
           await this.openTeamMenu(platform);
         });
+    } else {
+      // GitLab-Gruppen folgen noch
+      console.log('Sorry, loading GitLab groups is not supported yet.');
+      process.exit(0);
     }
   }
 
@@ -91,9 +97,13 @@ export class Menu {
   }
 
   private async listTeamMembers(platform: IPlatform) {
-    let dataOrgaList: { login: string }[];
     try {
-      dataOrgaList = await this.hubService.listOrgaMembers(platform);
+      const members = await this.hubService.listOrgaMembers(platform);
+      console.clear();
+      const table = new util.table({ head: ['Username'] });
+      members.forEach((member) => table.push([member.login]));
+      console.log(table.toString());
+      console.log('\n');
     } catch (error) {
       const message = axios.isAxiosError(error)
         ? `${error.response?.status} ${error.response?.statusText}`
@@ -103,12 +113,8 @@ export class Menu {
       return this.openTeamMenu(platform);
     }
 
-    console.clear();
-    console.table(dataOrgaList.map((member) => ({ Username: member.login })));
-    console.log('\n');
-
     await util.inquirer.prompt(iP.returnToMainMenu).then((answer) => {
-      if (answer['loadOrg'] === true) {
+      if (answer['proceed'] === true) {
         this.openTeamMenu(platform);
       } else {
         console.log('The program will be terminated now.');

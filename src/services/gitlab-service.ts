@@ -1,5 +1,5 @@
-import axios from 'axios';
 import { CLIENT_ID_GITLAB } from '../config/config.js';
+import { axios } from '../utils/utils.js';
 
 export class GitLabService {
   //-------------- GitLab Login --------------------

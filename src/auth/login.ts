@@ -96,21 +96,21 @@ export class Login {
 
     try {
       const answer = await util.inquirer.prompt(iP.loginQuestion);
-      util.spinner.start('Started login process...');
 
       const provider = answer['loginOptions'];
       const platformLogins = PLATFORM_LOGINS[provider];
 
       if (!platformLogins) {
         console.log('Sorry we only support these two platforms.');
-        return;
+        process.exit(0);
       }
 
+      util.spinner.start('Started login process...');
       const existingToken = await this.tokenManagement.doesTokenExist(platformLogins);
 
       if (existingToken) {
-        await this.menu.openMainMenu(existingToken);
         util.spinner.succeed('Login successful');
+        await this.menu.openMainMenu(existingToken);
       } else {
         await this.loginGitHubOrLab(platformLogins);
       }
