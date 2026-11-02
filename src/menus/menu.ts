@@ -91,18 +91,42 @@ export class Menu {
       if (answer['manageMembersOptions'] == 'lom') {
         await this.listTeamMembers(platform);
       } else if (answer['manageMembersOptions'] == 'coi') {
+        const { email, role } = await util.inquirer.prompt([
+          ...iP.enterEmailOfNewUser,
+          ...iP.enterRole,
+        ]);
+        if (role === 'Back') {
+          this.openTeamMenu(platform);
+        } else {
+          const success = await this.hubService.createNewInvitation(platform, email, role);
+          if (success) {
+            console.log('Invite was sucessfully send.');
+          }
+        }
       } else {
+        const username = await util.inquirer.prompt(iP.usernameOfDeletedUser);
+        const success = await this.hubService.removeUserFromOrg(platform, username['username']);
+
+        if (success) {
+          console.log('The user was removed.');
+        }
       }
+      await this.utils.wait(3000);
+      console.clear();
+      this.openTeamMenu(platform);
     });
   }
 
   private async listTeamMembers(platform: IPlatform) {
     try {
-      const members = await this.hubService.listOrgaMembers(platform);
+      const [member, admin] = await this.hubService.listOrgaMembers(platform);
       console.clear();
-      const table = new util.table({ head: ['Username'] });
-      members.forEach((member) => table.push([member.login]));
-      console.log(table.toString());
+      const table = new util.Table();
+      table.addColumn('Username');
+      table.addColumn('Role');
+      member.forEach((member) => table.addRow([member.name, member.role]));
+      admin.forEach((admin) => table.addRow([admin.name, admin.role]));
+      console.log(table.render());
       console.log('\n');
     } catch (error) {
       const message = axios.isAxiosError(error)
@@ -110,6 +134,7 @@ export class Menu {
         : error;
       this.utils.logError(message);
       await this.utils.wait(3000);
+      console.clear();
       return this.openTeamMenu(platform);
     }
 

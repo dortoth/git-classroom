@@ -57,3 +57,32 @@ export const returnToMainMenu = [
     message: 'Would you like to return to the main menu? Press enter.',
   },
 ];
+
+export const enterEmailOfNewUser = [
+  {
+    type: 'input',
+    name: 'email',
+    message: 'Please enter the email of the new member.\n',
+  },
+];
+
+export const enterRole = [
+  {
+    type: 'rawlist',
+    name: 'role',
+    message: 'Please enter the role of the new member.',
+    choices: [
+      { name: 'Direct Memeber', value: 'direct_member' },
+      { name: 'Admin', value: 'admin' },
+      'Return to menu',
+    ],
+  },
+];
+
+export const usernameOfDeletedUser = [
+  {
+    type: 'input',
+    name: 'username',
+    message: 'Please enter the username of the member you want to remove.\n',
+  },
+];
