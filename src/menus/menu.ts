@@ -63,9 +63,6 @@ export class Menu {
     }
   }
 
-  // createClassroom (das Repo mit den Metadaten, also Roster und Assignments)
-  // createTemplateRepository
-  // createAssignment (aus dem Template ein Repo pro Studierendem)
   openTeamMenu(platform: IPlatform) {
     console.clear();
     util.inquirer
@@ -77,8 +74,12 @@ export class Menu {
           this.createClassroom();
         } else if (answer['menuOptions'] == 'ctp') {
           this.createTemplateRepository();
-        } else {
+        } else if (answer['menuOptions'] == 'ca') {
           this.createAssignment();
+        } else {
+          console.log('The application will close now.');
+          console.log('Return soon! ~meow');
+          process.exit(1);
         }
       })
       .catch((error) => {
@@ -91,29 +92,19 @@ export class Menu {
       if (answer['manageMembersOptions'] == 'lom') {
         await this.listTeamMembers(platform);
       } else if (answer['manageMembersOptions'] == 'coi') {
-        const { email, role } = await util.inquirer.prompt([
-          ...iP.enterEmailOfNewUser,
-          ...iP.enterRole,
-        ]);
-        if (role === 'Back') {
-          this.openTeamMenu(platform);
-        } else {
-          const success = await this.hubService.createNewInvitation(platform, email, role);
-          if (success) {
-            console.log('Invite was sucessfully send.');
-          }
-        }
+        await this.createAnTeamInivtation(platform);
       } else {
-        const username = await util.inquirer.prompt(iP.usernameOfDeletedUser);
-        const success = await this.hubService.removeUserFromOrg(platform, username['username']);
-
-        if (success) {
-          console.log('The user was removed.');
-        }
+        await this.removeTeamMemeber(platform);
       }
-      await this.utils.wait(3000);
-      console.clear();
-      this.openTeamMenu(platform);
+    });
+
+    await util.inquirer.prompt(iP.returnToMainMenu).then((answer) => {
+      if (answer['proceed'] === true) {
+        this.openTeamMenu(platform);
+      } else {
+        console.log('The program will be terminated now.');
+        process.exit(0);
+      }
     });
   }
 
@@ -137,15 +128,43 @@ export class Menu {
       console.clear();
       return this.openTeamMenu(platform);
     }
+  }
 
-    await util.inquirer.prompt(iP.returnToMainMenu).then((answer) => {
-      if (answer['proceed'] === true) {
-        this.openTeamMenu(platform);
-      } else {
-        console.log('The program will be terminated now.');
-        process.exit(0);
+  private async createAnTeamInivtation(platform: IPlatform) {
+    console.clear();
+    const { role } = await util.inquirer.prompt(iP.enterRole);
+
+    if (role === 'Back') {
+      this.openTeamMenu(platform);
+      return;
+    }
+
+    const emailAnswer = await util.inquirer.prompt(iP.enterEmailOfNewUser);
+    const emails = emailAnswer['email'].split(',').map((e: string) => e.trim());
+
+    for (const email of emails) {
+      try {
+        await this.hubService.createNewInvitation(platform, email, role);
+        console.log(`Invitation sent to ${email}.`);
+      } catch (error) {
+        console.log(`Invitation for ${email} failed.`);
       }
-    });
+    }
+  }
+
+  private async removeTeamMemeber(platform: IPlatform) {
+    console.clear();
+    const userAnswer = await util.inquirer.prompt(iP.usernameOfDeletedUser);
+    const usernames = userAnswer['username'].split(',').map((u: string) => u.trim());
+
+    for (const username of usernames) {
+      try {
+        await this.hubService.removeUserFromOrg(platform, username);
+        console.log(`${username} was removed.`);
+      } catch (error) {
+        console.log(`Removing ${username} failed.`);
+      }
+    }
   }
 
   async createClassroom() {}

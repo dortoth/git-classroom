@@ -16,6 +16,7 @@ export const menuQuestion = [
       { name: 'Create Classroom', value: 'cc' },
       { name: 'Create Template Repository', value: 'ctp' },
       { name: 'Create Assignment', value: 'ca' },
+      { name: 'Exit the application', value: 'exit' },
     ],
   },
 ];
@@ -62,7 +63,8 @@ export const enterEmailOfNewUser = [
   {
     type: 'input',
     name: 'email',
-    message: 'Please enter the email of the new member.\n',
+    message:
+      'Please enter the email(s) of the new member(s).\n If you want to add more than one person, please seperate them by commas!\n',
   },
 ];
 
@@ -70,7 +72,7 @@ export const enterRole = [
   {
     type: 'rawlist',
     name: 'role',
-    message: 'Please enter the role of the new member.',
+    message: 'Please enter which role the new memeber should have.',
     choices: [
       { name: 'Direct Memeber', value: 'direct_member' },
       { name: 'Admin', value: 'admin' },
@@ -83,6 +85,7 @@ export const usernameOfDeletedUser = [
   {
     type: 'input',
     name: 'username',
-    message: 'Please enter the username of the member you want to remove.\n',
+    message:
+      'Please enter the username(s) of the member(s) you want to remove.\n If you want to remove more than one person, please seperate them by commas! \n',
   },
 ];

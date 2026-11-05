@@ -25,7 +25,7 @@ export class GitHubService {
 
   async githubLoginApi() {
     const res = await axios.post(
-      `${githubLogin}/login/device/code`,
+      `${githubLogin}/device/code`,
       { client_id: CLIENT_ID_GITHUB, scope: 'admin:org' },
       { headers: { Accept: 'application/json' } },
     );

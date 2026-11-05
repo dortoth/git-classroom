@@ -19,43 +19,20 @@ export class Login {
     private readonly tokenManagement: TokenManagement,
   ) {}
 
-  renderFiglet(
-    text: string,
-    options: Parameters<typeof util.figlet>[1],
-    colorFn: (text: string) => string,
-  ) {
-    return new Promise<void>((resolve) => {
-      util.figlet(text, options, (err, data) => {
-        if (err || !data) {
-          this.utils.logError(err);
-          resolve();
-          return;
-        }
-
-        let tempResult = util.alignText(data, (length) =>
-          this.utils.centerText(length, process.stdout.columns || 80),
-        );
-        let result = colorFn(tempResult);
-        console.log(result);
-        resolve();
-      });
-    });
-  }
-
   async startProgram() {
-    await this.renderFiglet(
-      'Welcome to Meowzerus Classroom',
-      { font: 'Small', horizontalLayout: 'fitted', verticalLayout: 'fitted' },
-      util.colors.whiteBright,
-    );
+    this.utils.renderBanner('Weclome to', {
+      font: 'tiny',
+      colors: ['red'],
+    });
 
-    await this.renderFiglet(
-      'The fun CLI for your Git classroom',
-      { font: 'mini', horizontalLayout: 'fitted', verticalLayout: 'fitted' },
-      util.colors.red,
-    );
+    await this.utils.wait(1000);
 
-    await this.utils.wait(3000);
+    this.utils.renderBanner('Schnurrbertos' + "' " + '|Classroom', {
+      font: 'block',
+      colors: ['whiteBright'],
+    });
+
+    await this.utils.wait(4000);
     console.clear();
 
     await this.isGitInstalled();

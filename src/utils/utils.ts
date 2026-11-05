@@ -1,8 +1,7 @@
 import ora from 'ora';
 export { default as inquirer } from 'inquirer';
 export { default as colors } from 'picocolors';
-export { default as figlet } from 'figlet';
-export { default as alignText } from 'align-text';
+import { default as cfonts } from 'cfonts';
 export { Table } from 'cmd-table';
 export { default as axios } from 'axios';
 export { execa } from 'execa';
@@ -22,5 +21,13 @@ export class Utils {
     console.log('Something went wrong...');
     console.log('Please try again!');
     console.log(error);
+  }
+
+  renderBanner(text: string, options: Record<string, unknown> = {}) {
+    try {
+      cfonts.say(text, { align: 'center', ...options });
+    } catch (error) {
+      this.logError(error);
+    }
   }
 }
