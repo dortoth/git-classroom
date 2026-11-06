@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { CLIENT_ID_GITHUB } from '../config/config.js';
-import type { IPlatform } from '../config/interfaces/iplatform.js';
+import type { IPlatform } from '../config/interfaces/platform.js';
 
 const gitHubApiUrl = 'https://api.github.com';
 const githubLogin = 'https://github.com/login';

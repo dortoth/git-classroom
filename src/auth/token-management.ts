@@ -1,11 +1,11 @@
 import { Entry } from '@napi-rs/keyring';
 import axios from 'axios';
 import { GITHUB_LOGIN, GITLAB_LOGIN, KEYRING_SERVICE } from '../config/config.js';
-import type { ILogin } from '../config/interfaces/ilogin.js';
+import type { ILogin } from '../config/interfaces/login.js';
 import type { GitHubService } from '../services/github-service.js';
 import type { GitLabService } from '../services/gitlab-service.js';
 import * as util from '../utils/utils.js';
-import type { IPlatform } from '../config/interfaces/iplatform.js';
+import type { IPlatform } from '../config/interfaces/platform.js';
 
 export class TokenManagement {
   constructor(

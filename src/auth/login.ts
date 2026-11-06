@@ -2,20 +2,20 @@
 import * as util from '../utils/utils.js';
 import type { GitHubService } from '../services/github-service.js';
 import type { GitLabService } from '../services/gitlab-service.js';
-import type { Menu } from '../menus/menu.js';
-import { TokenManagement } from './tokenManagement.js';
-import * as iP from '../utils/inquirerPrompt.js';
+import type { MainMenu } from '../menus/main-menu.js';
+import { TokenManagement } from './token-management.js';
+import * as iP from '../utils/inquirer-prompts.js';
 import { GITHUB_LOGIN, GITLAB_LOGIN, KEYRING_SERVICE, PLATFORM_LOGINS } from '../config/config.js';
 import { Entry } from '@napi-rs/keyring';
-import type { ILogin } from '../config/interfaces/ilogin.js';
-import type { IPlatform } from '../config/interfaces/iplatform.js';
+import type { ILogin } from '../config/interfaces/login.js';
+import type { IPlatform } from '../config/interfaces/platform.js';
 
 export class Login {
   constructor(
     private readonly hubService: GitHubService,
     private readonly labService: GitLabService,
     private readonly utils: util.Utils,
-    private readonly menu: Menu,
+    private readonly menu: MainMenu,
     private readonly tokenManagement: TokenManagement,
   ) {}
 
