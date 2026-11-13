@@ -4,8 +4,8 @@ import type { GitLabService } from '../services/gitlab-service.js';
 import * as iP from '../utils/inquirer-prompts.js';
 import * as util from '../utils/utils.js';
 import type { ManageMembersMenu } from './manage-members-menu.js';
-import { ClassroomMenu } from './classroom-menu.js';
 import type { TemplateRepositoryMenu } from './template-repository-menu.js';
+import type { StudentRepositoryMenu } from './student-repository-menu.js';
 
 export class MainMenu {
   private hubService!: GitHubService;
@@ -14,7 +14,7 @@ export class MainMenu {
   constructor(
     private readonly utils: util.Utils,
     private readonly membersMenu: ManageMembersMenu,
-    private readonly classroomMenu: ClassroomMenu,
+    private readonly studentRepository: StudentRepositoryMenu,
     private readonly templateRepoMenu: TemplateRepositoryMenu,
   ) {}
 
@@ -61,7 +61,7 @@ export class MainMenu {
         ])
         .then(async (answer) => {
           platform.teamsUrl = answer['organization'];
-          await this.openTeamMenu(platform);
+          await this.openClassroomMenu(platform);
         });
     } else {
       // GitLab-Gruppen folgen noch
@@ -70,15 +70,15 @@ export class MainMenu {
     }
   }
 
-  openTeamMenu(platform: IPlatform) {
+  openClassroomMenu(platform: IPlatform) {
     console.clear();
     util.inquirer
       .prompt(iP.menuQuestion)
       .then(async (answer) => {
         if (answer['menuOptions'] == 'mom') {
           this.membersMenu.manageMembers(platform);
-        } else if (answer['menuOptions'] == 'cc') {
-          this.openClassroomMenu(platform);
+        } else if (answer['menuOptions'] == 'crs') {
+          this.openStudentRepositoryMenu(platform);
         } else if (answer['menuOptions'] == 'ctp') {
           this.openTemplateRepositoryMenu(platform);
         } else {
@@ -92,49 +92,29 @@ export class MainMenu {
       });
   }
 
-  async openClassroomMenu(platform: IPlatform) {
-    console.clear();
-    util.inquirer.prompt(iP.classroomMenuOptions).then(async (answer) => {
-      if (answer['classroomsOptions'] == 'List Classrooms') {
-        await this.classroomMenu.listClassrooms();
-      } else if (answer['classroomsOptions'] == 'Create Classroom') {
-        await this.classroomMenu.createClassroon();
-      } else if (answer['classroomsOptions'] == 'Update Classroom') {
-        await this.classroomMenu.updateClassroom();
-      } else if (answer['classroomsOptions'] == 'Delete Classroom') {
-        await this.classroomMenu.deleteClassroom();
-      } else if (answer['classroomsOptions'] == 'List Classroom Members of specific Classroom') {
-        await this.classroomMenu.listClassroomMembers();
-      } else {
-        this.openTeamMenu(platform);
-      }
-    });
-  }
-
   async openTemplateRepositoryMenu(platform: IPlatform) {
     console.clear();
     util.inquirer.prompt(iP.templateRepoMenuOptions).then(async (answer) => {
       if (answer['templateRepoOptions'] == 'Create Template Repository') {
         await this.templateRepoMenu.createTemplateRepo();
-      } else if (answer['templateRepoOptions'] == 'Assign a Repository to a Team') {
-        await this.templateRepoMenu.assignRepoToTeam();
-      } else if (answer['templateRepoOptions'] == 'Edit A Repository') {
-        await this.openEditRepositoryOptions(platform);
+      } else if (answer['templateRepoOptions'] == 'Edit a Repositorys Files or Settings') {
+        await this.templateRepoMenu.createOrUpdateRepo();
       } else {
-        this.openTeamMenu(platform);
+        this.openClassroomMenu(platform);
       }
     });
   }
 
-  private async openEditRepositoryOptions(platform: IPlatform) {
+  async openStudentRepositoryMenu(platform: IPlatform) {
     console.clear();
+    //List of Students laden
     util.inquirer.prompt(iP.repoOptions).then(async (answer) => {
-      if (answer['repoOptions'] == 'Create a pull request') {
-        await this.templateRepoMenu.createPullRequest();
-      } else if (answer['repoOptions'] == 'Create or update file contents') {
-        await this.templateRepoMenu.createOrUpdateFile();
+      if (answer['repoOptions'] == 'csrot') {
+        await this.studentRepository.createARepoForAStudent();
+      } else if (answer['repoOptions'] == 'prs') {
+        await this.studentRepository.createPullRequestForRepo();
       } else {
-        this.openTemplateRepositoryMenu(platform);
+        this.openClassroomMenu(platform);
       }
     });
   }

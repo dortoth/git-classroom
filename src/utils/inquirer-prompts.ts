@@ -34,8 +34,8 @@ export const menuQuestion = [
     message: 'What would you like to do?',
     choices: [
       { name: 'Manage team members', value: 'mom' },
-      { name: 'Create Classroom', value: 'cc' },
-      { name: 'Create Template Repository', value: 'ctp' },
+      { name: 'Manage Template Repository', value: 'ctp' },
+      { name: 'Manage Repository for Student', value: 'crs' },
       { name: 'Exit the application', value: 'exit' },
     ],
   },
@@ -108,24 +108,6 @@ export const usernameOfDeletedUser = [
   },
 ];
 
-// ===================== Classroom =====================
-
-export const classroomMenuOptions = [
-  {
-    type: 'rawlist',
-    name: 'classroomsOptions',
-    message: 'What would you like to do?',
-    choices: [
-      { name: 'List Classrooms' },
-      { name: 'Create Classroom' },
-      { name: 'Update Classroom' },
-      { name: 'Delete Classroom' },
-      { name: 'List Classroom Members of specific Classroom' },
-      { name: 'Return to Main Menu' },
-    ],
-  },
-];
-
 // ===================== Template Repository =====================
 
 export const templateRepoMenuOptions = [
@@ -135,9 +117,8 @@ export const templateRepoMenuOptions = [
     message: 'What would you like to do?',
     choices: [
       { name: 'Create Template Repository' },
-      { name: 'Assign a Repository to a Team' },
-      { name: 'Edit A Repository' },
-      { name: 'Return to Main Menu' },
+      { name: 'Edit a Repositorys Files or Settings' },
+      { name: 'Return to Classroom Menu' },
     ],
   },
 ];
@@ -148,9 +129,12 @@ export const repoOptions = [
     name: 'repoOptions',
     message: 'What would you like to do?',
     choices: [
-      { name: 'Create a pull request' },
-      { name: 'Create or update file contents' },
-      { name: 'Return to Template Repository Menu' },
+      {
+        name: 'Create a new Repository for a Student out of a Tempalte Repository',
+        value: 'csrot',
+      },
+      { name: 'Create a pull request for a repository of a student', value: 'prs' },
+      { name: 'Return to Classroom Menu' },
     ],
   },
 ];

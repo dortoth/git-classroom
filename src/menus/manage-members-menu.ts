@@ -28,13 +28,13 @@ export class ManageMembersMenu {
       } else if (answer['manageMembersOptions'] == 'rom') {
         await this.removeTeamMemeber(platform);
       } else {
-        await this.menu.openMainMenu(platform);
+        await this.menu.openClassroomMenu(platform);
       }
     });
 
     await util.inquirer.prompt(iP.returnToMainMenu).then((answer) => {
       if (answer['proceed'] === true) {
-        this.menu.openTeamMenu(platform);
+        this.menu.openClassroomMenu(platform);
       } else {
         console.log('The program will be terminated now.');
         process.exit(0);
@@ -60,7 +60,7 @@ export class ManageMembersMenu {
       this.utils.logError(message);
       await this.utils.wait(3000);
       console.clear();
-      return this.menu.openTeamMenu(platform);
+      return this.menu.openClassroomMenu(platform);
     }
   }
 
@@ -69,7 +69,7 @@ export class ManageMembersMenu {
     const { role } = await util.inquirer.prompt(iP.enterRole(platform.provider));
 
     if (role === 'back') {
-      this.menu.openTeamMenu(platform);
+      this.menu.openClassroomMenu(platform);
       return;
     }
 

@@ -3,15 +3,7 @@ export class TemplateRepositoryMenu {
     //TODO
   }
 
-  public async assignRepoToTeam() {
-    //TODO
-  }
-
-  public async createPullRequest() {
-    //TODO
-  }
-
-  public async createOrUpdateFile() {
+  public async createOrUpdateRepo() {
     //TODO
   }
 }

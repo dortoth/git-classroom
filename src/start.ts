@@ -7,16 +7,16 @@ import { GitLabService } from './services/gitlab-service.js';
 import { Utils } from './utils/utils.js';
 import { TokenManagement } from './auth/token-management.js';
 import { ManageMembersMenu } from './menus/manage-members-menu.js';
-import { ClassroomMenu } from './menus/classroom-menu.js';
 import { TemplateRepositoryMenu } from './menus/template-repository-menu.js';
+import { StudentRepositoryMenu } from './menus/student-repository-menu.js';
 
 const utils = new Utils();
 const hubService = new GitHubService();
 const labService = new GitLabService();
 const membersMenu = new ManageMembersMenu(hubService, labService, utils);
-const classroomMenu = new ClassroomMenu();
+const studentMenu = new StudentRepositoryMenu();
 const templateRepoMenu = new TemplateRepositoryMenu();
-const menu = new MainMenu(utils, membersMenu, classroomMenu, templateRepoMenu);
+const menu = new MainMenu(utils, membersMenu, studentMenu, templateRepoMenu);
 membersMenu.setMainMenu(menu);
 menu.setServices(hubService, labService);
 
