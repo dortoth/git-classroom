@@ -27,20 +27,6 @@ export const loadTeams = [
   },
 ];
 
-export const menuQuestion = [
-  {
-    type: 'rawlist',
-    name: 'menuOptions',
-    message: 'What would you like to do?',
-    choices: [
-      { name: 'Manage team members', value: 'mom' },
-      { name: 'Manage Template Repository', value: 'ctp' },
-      { name: 'Manage Repository for Student', value: 'crs' },
-      { name: 'Exit the application', value: 'exit' },
-    ],
-  },
-];
-
 export const returnToMainMenu = [
   {
     type: 'confirm',
@@ -50,20 +36,6 @@ export const returnToMainMenu = [
 ];
 
 // ===================== Manage Members =====================
-
-export const manageMembersOptions = [
-  {
-    type: 'rawlist',
-    name: 'manageMembersOptions',
-    message: 'What would you like to do?',
-    choices: [
-      { name: 'List team members', value: 'lom' },
-      { name: 'Create an team invitation', value: 'coi' },
-      { name: 'Remove an team member', value: 'rom' },
-      { name: 'Return to Main Menu', value: 'rtm' },
-    ],
-  },
-];
 
 export const enterEmailOfNewUser = [
   {
@@ -108,33 +80,20 @@ export const usernameOfDeletedUser = [
   },
 ];
 
-// ===================== Template Repository =====================
+// ===================== Action Menus =====================
 
-export const templateRepoMenuOptions = [
-  {
-    type: 'rawlist',
-    name: 'templateRepoOptions',
-    message: 'What would you like to do?',
-    choices: [
-      { name: 'Create Template Repository' },
-      { name: 'Edit a Repositorys Files or Settings' },
-      { name: 'Return to Classroom Menu' },
-    ],
-  },
-];
+export type MenuAction = {
+  name: string;
+  value: () => unknown;
+};
 
-export const repoOptions = [
-  {
-    type: 'rawlist',
-    name: 'repoOptions',
-    message: 'What would you like to do?',
-    choices: [
-      {
-        name: 'Create a new Repository for a Student out of a Tempalte Repository',
-        value: 'csrot',
-      },
-      { name: 'Create a pull request for a repository of a student', value: 'prs' },
-      { name: 'Return to Classroom Menu' },
-    ],
-  },
-];
+export function actionMenu(choices: MenuAction[], message = 'What would you like to do?') {
+  return [
+    {
+      type: 'rawlist',
+      name: 'action',
+      message,
+      choices,
+    },
+  ];
+}

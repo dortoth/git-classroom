@@ -20,17 +20,16 @@ export class ManageMembersMenu {
   }
 
   async manageMembers(platform: IPlatform) {
-    await util.inquirer.prompt(iP.manageMembersOptions).then(async (answer) => {
-      if (answer['manageMembersOptions'] == 'lom') {
-        await this.listTeamMembers(platform);
-      } else if (answer['manageMembersOptions'] == 'coi') {
-        await this.createAnTeamInivtation(platform);
-      } else if (answer['manageMembersOptions'] == 'rom') {
-        await this.removeTeamMemeber(platform);
-      } else {
-        await this.menu.openClassroomMenu(platform);
-      }
-    });
+    await util.inquirer
+      .prompt(
+        iP.actionMenu([
+          { name: 'List team members', value: () => this.listTeamMembers(platform) },
+          { name: 'Create an team invitation', value: () => this.createAnTeamInivtation(platform) },
+          { name: 'Remove an team member', value: () => this.removeTeamMemeber(platform) },
+          { name: 'Return to Main Menu', value: () => this.menu.openClassroomMenu(platform) },
+        ]),
+      )
+      .then((answer) => answer['action']());
 
     await util.inquirer.prompt(iP.returnToMainMenu).then((answer) => {
       if (answer['proceed'] === true) {

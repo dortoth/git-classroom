@@ -73,20 +73,21 @@ export class MainMenu {
   openClassroomMenu(platform: IPlatform) {
     console.clear();
     util.inquirer
-      .prompt(iP.menuQuestion)
-      .then(async (answer) => {
-        if (answer['menuOptions'] == 'mom') {
-          this.membersMenu.manageMembers(platform);
-        } else if (answer['menuOptions'] == 'crs') {
-          this.openStudentRepositoryMenu(platform);
-        } else if (answer['menuOptions'] == 'ctp') {
-          this.openTemplateRepositoryMenu(platform);
-        } else {
-          console.log('The application will close now.');
-          console.log('Return soon! ~meow');
-          process.exit(0);
-        }
-      })
+      .prompt(
+        iP.actionMenu([
+          { name: 'Manage team members', value: () => this.membersMenu.manageMembers(platform) },
+          {
+            name: 'Manage Template Repository',
+            value: () => this.openTemplateRepositoryMenu(platform),
+          },
+          {
+            name: 'Manage Repository for Student',
+            value: () => this.openStudentRepositoryMenu(platform),
+          },
+          { name: 'Exit the application', value: () => this.exitApplication() },
+        ]),
+      )
+      .then((answer) => answer['action']())
       .catch((error) => {
         this.utils.logError(error);
       });
@@ -94,28 +95,46 @@ export class MainMenu {
 
   async openTemplateRepositoryMenu(platform: IPlatform) {
     console.clear();
-    util.inquirer.prompt(iP.templateRepoMenuOptions).then(async (answer) => {
-      if (answer['templateRepoOptions'] == 'Create Template Repository') {
-        await this.templateRepoMenu.createTemplateRepo();
-      } else if (answer['templateRepoOptions'] == 'Edit a Repositorys Files or Settings') {
-        await this.templateRepoMenu.createOrUpdateRepo();
-      } else {
-        this.openClassroomMenu(platform);
-      }
-    });
+    util.inquirer
+      .prompt(
+        iP.actionMenu([
+          {
+            name: 'Create Template Repository',
+            value: () => this.templateRepoMenu.createTemplateRepo(),
+          },
+          {
+            name: 'Edit a Repositorys Files or Settings',
+            value: () => this.templateRepoMenu.createOrUpdateRepo(),
+          },
+          { name: 'Return to Classroom Menu', value: () => this.openClassroomMenu(platform) },
+        ]),
+      )
+      .then((answer) => answer['action']());
   }
 
   async openStudentRepositoryMenu(platform: IPlatform) {
     console.clear();
     //List of Students laden
-    util.inquirer.prompt(iP.repoOptions).then(async (answer) => {
-      if (answer['repoOptions'] == 'csrot') {
-        await this.studentRepository.createARepoForAStudent();
-      } else if (answer['repoOptions'] == 'prs') {
-        await this.studentRepository.createPullRequestForRepo();
-      } else {
-        this.openClassroomMenu(platform);
-      }
-    });
+    util.inquirer
+      .prompt(
+        iP.actionMenu([
+          {
+            name: 'Create a new Repository for a Student out of a Template Repository',
+            value: () => this.studentRepository.createARepoForAStudent(),
+          },
+          {
+            name: 'Create a pull request for a repository of a student',
+            value: () => this.studentRepository.createPullRequestForRepo(),
+          },
+          { name: 'Return to Classroom Menu', value: () => this.openClassroomMenu(platform) },
+        ]),
+      )
+      .then((answer) => answer['action']());
+  }
+
+  private exitApplication() {
+    console.log('The application will close now.');
+    console.log('Return soon! ~meow');
+    process.exit(0);
   }
 }
