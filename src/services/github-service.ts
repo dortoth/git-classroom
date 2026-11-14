@@ -1,16 +1,25 @@
-import axios from 'axios';
-import { CLIENT_ID_GITHUB } from '../config/config.js';
+import axios, { type AxiosInstance } from 'axios';
+import { GITHUB_API_URL, GITHUB_LOGIN } from '../config/config.js';
 import type { IPlatform } from '../config/interfaces/platform.js';
 
-const gitHubApiUrl = 'https://api.github.com';
-const githubLogin = 'https://github.com/login';
-
 export class GitHubService {
+  private api(token: string): AxiosInstance {
+    return axios.create({
+      baseURL: GITHUB_API_URL,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/vnd.github+json',
+      },
+    });
+  }
+
+  // ----------- GitHub Login ------------------
+
   async requestGitHubToken(deviceCode: string) {
     const response = await axios.post(
-      `${githubLogin}/oauth/access_token`,
+      GITHUB_LOGIN.tokenUrl,
       {
-        client_id: CLIENT_ID_GITHUB,
+        client_id: GITHUB_LOGIN.clientId,
         device_code: deviceCode,
         grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
       },
@@ -25,8 +34,8 @@ export class GitHubService {
 
   async githubLoginApi() {
     const res = await axios.post(
-      `${githubLogin}/device/code`,
-      { client_id: CLIENT_ID_GITHUB, scope: 'admin:org' },
+      GITHUB_LOGIN.deviceCodeUrl,
+      { client_id: GITHUB_LOGIN.clientId, scope: 'admin:org' },
       { headers: { Accept: 'application/json' } },
     );
     return res.data;
@@ -35,33 +44,17 @@ export class GitHubService {
   // ----------- GitHub Menu ------------------
 
   async loadGithubOrganization(token: string) {
-    try {
-      const res = await axios.get(`${gitHubApiUrl}/user/orgs`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: 'application/vnd.github+json',
-        },
-      });
-      return res.data;
-    } catch {
-      console.log('Something went wrong...');
-      process.exit(1);
-    }
+    const res = await this.api(token).get('/user/orgs');
+    return res.data;
   }
 
-  private async getRoleOfMemebers(
+  private async getMembersByRole(
     platform: IPlatform,
     role: 'member' | 'admin',
   ): Promise<{ name: string; role: string }[]> {
-    const res = await axios.get<{ login: string }[]>(
-      `${gitHubApiUrl}/orgs/${platform.teamsUrl}/members`,
-      {
-        params: { per_page: 100, role },
-        headers: {
-          Authorization: `Bearer ${platform.token}`,
-          Accept: 'application/vnd.github+json',
-        },
-      },
+    const res = await this.api(platform.token).get<{ login: string }[]>(
+      `/orgs/${platform.classroomUrl}/members`,
+      { params: { per_page: 100, role } },
     );
 
     return res.data.map((m) => ({ name: m.login, role }));
@@ -69,35 +62,23 @@ export class GitHubService {
 
   async listOrgaMembers(platform: IPlatform) {
     return Promise.all([
-      this.getRoleOfMemebers(platform, 'member'),
-      this.getRoleOfMemebers(platform, 'admin'),
+      this.getMembersByRole(platform, 'member'),
+      this.getMembersByRole(platform, 'admin'),
     ]);
   }
 
   async createNewInvitation(platform: IPlatform, email: string, role: string): Promise<boolean> {
-    const res = await axios.post(
-      `${gitHubApiUrl}/orgs/${platform.teamsUrl}/invitations`,
-      { email, role },
-      {
-        headers: {
-          Authorization: `Bearer ${platform.token}`,
-          Accept: 'application/vnd.github+json',
-        },
-      },
-    );
+    const res = await this.api(platform.token).post(`/orgs/${platform.classroomUrl}/invitations`, {
+      email,
+      role,
+    });
 
     return res.status === 201;
   }
 
   async removeUserFromOrg(platform: IPlatform, username: string): Promise<boolean> {
-    const res = await axios.delete(
-      `${gitHubApiUrl}/orgs/${platform.teamsUrl}/memberships/${username}`,
-      {
-        headers: {
-          Authorization: `Bearer ${platform.token}`,
-          Accept: 'application/vnd.github+json',
-        },
-      },
+    const res = await this.api(platform.token).delete(
+      `/orgs/${platform.classroomUrl}/memberships/${username}`,
     );
 
     return res.status === 204;

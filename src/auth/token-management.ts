@@ -1,6 +1,12 @@
 import { Entry } from '@napi-rs/keyring';
 import axios from 'axios';
-import { GITHUB_LOGIN, GITLAB_LOGIN, KEYRING_SERVICE } from '../config/config.js';
+import {
+  GITHUB_API_URL,
+  GITHUB_LOGIN,
+  GITLAB_API_URL,
+  GITLAB_LOGIN,
+  KEYRING_SERVICE,
+} from '../config/config.js';
 import type { ILogin } from '../config/interfaces/login.js';
 import type { GitHubService } from '../services/github-service.js';
 import type { GitLabService } from '../services/gitlab-service.js';
@@ -23,40 +29,40 @@ export class TokenManagement {
   }
 
   async doesTokenExist(platformLogins: ILogin) {
-    let platfromMenu: IPlatform;
+    let platform: IPlatform;
     if (platformLogins === GITHUB_LOGIN) {
       const token = this.readToken('github_token');
       if (!token) return null;
 
-      const response = await axios.get('https://api.github.com/user', {
+      const response = await axios.get(`${GITHUB_API_URL}/user`, {
         headers: { Authorization: `Bearer ${token}` },
         validateStatus: () => true,
       });
 
       if (response.status !== 200) return null;
 
-      platfromMenu = {
+      platform = {
         provider: 'GitHub',
         token: token,
       };
 
-      return platfromMenu;
+      return platform;
     } else if (platformLogins === GITLAB_LOGIN) {
       const token = this.readToken('gitlab_token');
       if (!token) return null;
 
-      const response = await axios.get('https://gitlab.com/api/v4/user', {
+      const response = await axios.get(`${GITLAB_API_URL}/user`, {
         headers: { Authorization: `Bearer ${token}` },
         validateStatus: () => true,
       });
 
       if (response.status !== 200) return null;
 
-      platfromMenu = {
+      platform = {
         provider: 'GitLab',
         token: token,
       };
-      return platfromMenu;
+      return platform;
     }
 
     return null;

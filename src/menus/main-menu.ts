@@ -8,35 +8,35 @@ import type { TemplateRepositoryMenu } from './template-repository-menu.js';
 import type { StudentRepositoryMenu } from './student-repository-menu.js';
 
 export class MainMenu {
-  private hubService!: GitHubService;
-  private labService!: GitLabService;
-
   constructor(
     private readonly utils: util.Utils,
     private readonly membersMenu: ManageMembersMenu,
     private readonly studentRepository: StudentRepositoryMenu,
     private readonly templateRepoMenu: TemplateRepositoryMenu,
+    private readonly hubService: GitHubService,
+    private readonly labService: GitLabService,
   ) {}
 
-  setServices(hubService: GitHubService, labService: GitLabService) {
-    this.hubService = hubService;
-    this.labService = labService;
-  }
-
-  openMainMenu(platform: IPlatform) {
+  async openMainMenu(platform: IPlatform) {
     console.clear();
-    util.inquirer.prompt(iP.loadTeams).then((answer) => {
-      if (answer['loadTeams'] !== true) {
+    await util.inquirer.prompt(iP.loadClassrooms).then(async (answer) => {
+      if (answer['loadClassrooms'] !== true) {
         process.exit(0);
       }
-      this.loadExisitingTeams(platform);
+      await this.loadExistingClassrooms(platform);
     });
   }
 
-  async loadExisitingTeams(platform: IPlatform) {
+  async loadExistingClassrooms(platform: IPlatform) {
     let data;
     if (platform.provider === 'GitHub') {
-      data = await this.hubService.loadGithubOrganization(platform.token);
+      try {
+        data = await this.hubService.loadGithubOrganization(platform.token);
+      } catch (error) {
+        this.utils.logError(error);
+        process.exit(1);
+      }
+
       if (data.length === 0) {
         console.log('Sorry there exist no organization. Please add one!');
         process.exit(1);
@@ -55,12 +55,12 @@ export class MainMenu {
           {
             type: 'select',
             name: 'organization',
-            message: 'Select a Team:',
-            choices: data.map((team: { login: string }) => team.login),
+            message: 'Select a Classroom:',
+            choices: data.map((classroom: { login: string }) => classroom.login),
           },
         ])
         .then(async (answer) => {
-          platform.teamsUrl = answer['organization'];
+          platform.classroomUrl = answer['organization'];
           await this.openClassroomMenu(platform);
         });
     } else {
@@ -70,12 +70,15 @@ export class MainMenu {
     }
   }
 
-  openClassroomMenu(platform: IPlatform) {
+  async openClassroomMenu(platform: IPlatform) {
     console.clear();
-    util.inquirer
+    await util.inquirer
       .prompt(
         iP.actionMenu([
-          { name: 'Manage team members', value: () => this.membersMenu.manageMembers(platform) },
+          {
+            name: 'Manage classroom members',
+            value: () => this.membersMenu.manageMembers(platform),
+          },
           {
             name: 'Manage Template Repository',
             value: () => this.openTemplateRepositoryMenu(platform),
@@ -95,7 +98,7 @@ export class MainMenu {
 
   async openTemplateRepositoryMenu(platform: IPlatform) {
     console.clear();
-    util.inquirer
+    await util.inquirer
       .prompt(
         iP.actionMenu([
           {
@@ -103,7 +106,7 @@ export class MainMenu {
             value: () => this.templateRepoMenu.createTemplateRepo(),
           },
           {
-            name: 'Edit a Repositorys Files or Settings',
+            name: "Edit a Repository's Files or Settings",
             value: () => this.templateRepoMenu.createOrUpdateRepo(),
           },
           { name: 'Return to Classroom Menu', value: () => this.openClassroomMenu(platform) },
@@ -115,7 +118,7 @@ export class MainMenu {
   async openStudentRepositoryMenu(platform: IPlatform) {
     console.clear();
     //List of Students laden
-    util.inquirer
+    await util.inquirer
       .prompt(
         iP.actionMenu([
           {

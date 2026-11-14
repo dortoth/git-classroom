@@ -19,11 +19,11 @@ export const continueQuestion = [
 
 // ===================== Main Menu =====================
 
-export const loadTeams = [
+export const loadClassrooms = [
   {
     type: 'confirm',
-    name: 'loadTeams',
-    message: 'Would you like to load your teams?',
+    name: 'loadClassrooms',
+    message: 'Would you like to load your classrooms?',
   },
 ];
 
@@ -42,7 +42,7 @@ export const enterEmailOfNewUser = [
     type: 'input',
     name: 'email',
     message:
-      'Please enter the email(s) of the new member(s).\n If you want to add more than one person, please seperate them by commas!\n',
+      'Please enter the email(s) of the new member(s).\n If you want to add more than one person, please separate them by commas!\n',
   },
 ];
 
@@ -50,15 +50,13 @@ export function enterRole(provider: string) {
   const roles =
     provider === 'GitLab'
       ? [
-          { name: 'Guest', value: '10' },
-          { name: 'Reporter', value: '20' },
-          { name: 'Developer', value: '30' },
-          { name: 'Maintainer', value: '40' },
-          { name: 'Owner', value: '50' },
+          { name: 'Student', value: '30' },
+          { name: 'Co Teacher', value: '40' },
+          { name: 'Teacher', value: '50' },
         ]
       : [
-          { name: 'Direct Member', value: 'direct_member' },
-          { name: 'Admin', value: 'admin' },
+          { name: 'Student', value: 'direct_member' },
+          { name: 'Teacher', value: 'admin' },
         ];
 
   return [
@@ -76,7 +74,7 @@ export const usernameOfDeletedUser = [
     type: 'input',
     name: 'username',
     message:
-      'Please enter the username(s) of the member(s) you want to remove.\n If you want to remove more than one person, please seperate them by commas! \n',
+      'Please enter the username(s) of the member(s) you want to remove.\n If you want to remove more than one person, please separate them by commas! \n',
   },
 ];
 

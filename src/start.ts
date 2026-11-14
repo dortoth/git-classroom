@@ -16,9 +16,15 @@ const labService = new GitLabService();
 const membersMenu = new ManageMembersMenu(hubService, labService, utils);
 const studentMenu = new StudentRepositoryMenu();
 const templateRepoMenu = new TemplateRepositoryMenu();
-const menu = new MainMenu(utils, membersMenu, studentMenu, templateRepoMenu);
+const menu = new MainMenu(
+  utils,
+  membersMenu,
+  studentMenu,
+  templateRepoMenu,
+  hubService,
+  labService,
+);
 membersMenu.setMainMenu(menu);
-menu.setServices(hubService, labService);
 
 const login = new Login(
   hubService,

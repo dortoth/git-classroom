@@ -1,5 +1,5 @@
 export interface IPlatform {
   provider: string;
   token: string;
-  teamsUrl?: string;
+  classroomUrl?: string;
 }

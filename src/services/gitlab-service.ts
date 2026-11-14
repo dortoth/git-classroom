@@ -1,5 +1,5 @@
-import { CLIENT_ID_GITLAB } from '../config/config.js';
-import { axios } from '../utils/utils.js';
+import axios from 'axios';
+import { GITLAB_LOGIN } from '../config/config.js';
 
 export class GitLabService {
   //-------------- GitLab Login --------------------
@@ -7,9 +7,9 @@ export class GitLabService {
     // GitLab antwortet bei "authorization_pending" mit einem Fehlerstatus.
     // Darum keine Exception werfen, sondern pollForToken entscheiden lassen.
     const response = await axios.post(
-      'https://gitlab.com/oauth/token',
+      GITLAB_LOGIN.tokenUrl,
       {
-        client_id: CLIENT_ID_GITLAB,
+        client_id: GITLAB_LOGIN.clientId,
         device_code: deviceCode,
         grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
       },
@@ -24,15 +24,15 @@ export class GitLabService {
 
   async gitlabLoginApi() {
     const res = await axios.post(
-      'https://gitlab.com/oauth/authorize_device',
-      { client_id: CLIENT_ID_GITLAB },
+      GITLAB_LOGIN.deviceCodeUrl,
+      { client_id: GITLAB_LOGIN.clientId },
       { headers: { Accept: 'application/json' } },
     );
     return res.data;
   }
 
   // ----------- GitLab Menu ------------------
-  async loadExisitingGitLabGroup() {
+  async loadExistingGitLabGroup() {
     //TODO
   }
 }

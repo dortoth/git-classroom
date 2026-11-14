@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 import * as util from '../utils/utils.js';
 import type { GitHubService } from '../services/github-service.js';
 import type { GitLabService } from '../services/gitlab-service.js';
@@ -20,12 +19,13 @@ export class Login {
   ) {}
 
   async startProgram() {
-    this.utils.renderBanner('Weclome to', {
+    this.utils.renderBanner('Welcome to', {
       font: 'tiny',
       colors: ['red'],
     });
 
     await this.utils.wait(1000);
+    console.clear();
 
     this.utils.renderBanner('Schnurrbertos' + "' " + '|Classroom', {
       font: 'block',
@@ -98,7 +98,7 @@ export class Login {
 
   async loginGitHubOrLab(platformLogins: ILogin) {
     let token = '';
-    let platfromMenu: IPlatform;
+    let platform: IPlatform;
     try {
       if (platformLogins === GITHUB_LOGIN) {
         const data = await this.hubService.githubLoginApi();
@@ -106,13 +106,11 @@ export class Login {
         const deviceCode = data.device_code;
         const expiresIn = data.expires_in;
         util.spinner.info();
-        console.log(
-          'Please go to  https://github.com/login/device and enter your Code ' + userCode,
-        );
+        console.log('Please go to ' + data.verification_uri + ' and enter your Code ' + userCode);
 
         token = await this.tokenManagement.pollForToken(platformLogins, deviceCode, expiresIn);
 
-        platfromMenu = {
+        platform = {
           provider: 'GitHub',
           token: token,
         };
@@ -130,7 +128,7 @@ export class Login {
         token = await this.tokenManagement.pollForToken(platformLogins, deviceCode, expiresIn);
         new Entry(KEYRING_SERVICE, 'gitlab_token').setPassword(token);
 
-        platfromMenu = {
+        platform = {
           provider: 'GitLab',
           token: token,
         };
@@ -139,7 +137,7 @@ export class Login {
       util.spinner.start('Menu is loading...');
       try {
         util.spinner.succeed('Login successful.');
-        await this.menu.openMainMenu(platfromMenu);
+        await this.menu.openMainMenu(platform);
       } catch {
         console.log('Something went wrong...');
         util.spinner.fail('Please try again!');
