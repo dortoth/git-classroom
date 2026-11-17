@@ -1,6 +1,7 @@
 import axios, { type AxiosInstance } from 'axios';
 import { GITHUB_API_URL, GITHUB_LOGIN } from '../config/config.js';
 import type { IPlatform } from '../config/interfaces/platform.js';
+import { platform } from 'node:os';
 
 export class GitHubService {
   private api(token: string): AxiosInstance {
@@ -35,7 +36,7 @@ export class GitHubService {
   async githubLoginApi() {
     const res = await axios.post(
       GITHUB_LOGIN.deviceCodeUrl,
-      { client_id: GITHUB_LOGIN.clientId, scope: 'admin:org' },
+      { client_id: GITHUB_LOGIN.clientId, scope: 'admin:org repo' },
       { headers: { Accept: 'application/json' } },
     );
     return res.data;
@@ -67,20 +68,33 @@ export class GitHubService {
     ]);
   }
 
-  async createNewInvitation(platform: IPlatform, email: string, role: string): Promise<boolean> {
-    const res = await this.api(platform.token).post(`/orgs/${platform.classroomUrl}/invitations`, {
+  async createNewInvitation(platform: IPlatform, email: string, role: string) {
+    await this.api(platform.token).post(`/orgs/${platform.classroomUrl}/invitations`, {
       email,
       role,
     });
-
-    return res.status === 201;
   }
 
-  async removeUserFromOrg(platform: IPlatform, username: string): Promise<boolean> {
-    const res = await this.api(platform.token).delete(
-      `/orgs/${platform.classroomUrl}/memberships/${username}`,
-    );
+  async removeUserFromOrg(platform: IPlatform, username: string) {
+    await this.api(platform.token).delete(`/orgs/${platform.classroomUrl}/memberships/${username}`);
+  }
 
-    return res.status === 204;
+  //Template Repository Menu
+
+  async createTemplateRepository(platform: IPlatform, repoName: string) {
+    await this.api(platform.token).post(`/orgs/${platform.classroomUrl}/repos`, {
+      name: repoName,
+      is_template: true,
+      auto_init: true,
+    });
+  }
+
+  async loadAllTemplateRepos(platform: IPlatform) {
+    const res = await this.api(platform.token).get(`/orgs/${platform.classroomUrl}/repos`);
+    return res.data;
+  }
+
+  async listAllContestOfRepo(owner: string, repoName: string) {
+    await axios.get(`${GITHUB_API_URL}/repos/${owner}/${repoName}/contents`);
   }
 }

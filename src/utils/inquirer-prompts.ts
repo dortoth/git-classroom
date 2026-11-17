@@ -95,3 +95,13 @@ export function actionMenu(choices: MenuAction[], message = 'What would you like
     },
   ];
 }
+
+// Template Repo
+
+export const enterNameOfTempalteRepo = [
+  {
+    type: 'input',
+    name: 'templateRepo',
+    message: 'Please enter the name of the template repository \n',
+  },
+];

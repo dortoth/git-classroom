@@ -81,7 +81,7 @@ export class MainMenu {
           },
           {
             name: 'Manage Template Repository',
-            value: () => this.openTemplateRepositoryMenu(platform),
+            value: () => this.templateRepoMenu.openTemplateRepositoryMenu(platform),
           },
           {
             name: 'Manage Repository for Student',
@@ -94,25 +94,6 @@ export class MainMenu {
       .catch((error) => {
         this.utils.logError(error);
       });
-  }
-
-  async openTemplateRepositoryMenu(platform: IPlatform) {
-    console.clear();
-    await util.inquirer
-      .prompt(
-        iP.actionMenu([
-          {
-            name: 'Create Template Repository',
-            value: () => this.templateRepoMenu.createTemplateRepo(),
-          },
-          {
-            name: "Edit a Repository's Files or Settings",
-            value: () => this.templateRepoMenu.createOrUpdateRepo(),
-          },
-          { name: 'Return to Classroom Menu', value: () => this.openClassroomMenu(platform) },
-        ]),
-      )
-      .then((answer) => answer['action']());
   }
 
   async openStudentRepositoryMenu(platform: IPlatform) {

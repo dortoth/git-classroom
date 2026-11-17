@@ -20,19 +20,19 @@ export class Login {
 
   async startProgram() {
     this.utils.renderBanner('Welcome to', {
-      font: 'tiny',
+      font: 'chrome',
       colors: ['red'],
     });
 
-    await this.utils.wait(1000);
+    await this.utils.wait(2000);
     console.clear();
 
     this.utils.renderBanner('Schnurrbertos' + "' " + '|Classroom', {
-      font: 'block',
+      font: 'tiny',
       colors: ['whiteBright'],
     });
 
-    await this.utils.wait(4000);
+    await this.utils.wait(3000);
     console.clear();
 
     await this.isGitInstalled();

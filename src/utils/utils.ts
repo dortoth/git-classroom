@@ -13,10 +13,6 @@ export class Utils {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  centerText(length: number, terminalWidth: number) {
-    return Math.max(0, Math.floor((terminalWidth - length) / 2));
-  }
-
   logError(error: unknown) {
     console.log('Something went wrong...');
     console.log('Please try again!');
