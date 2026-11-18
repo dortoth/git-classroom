@@ -76,21 +76,43 @@ export class TemplateRepositoryMenu {
       process.exit(1);
     }
 
+    const tempalteRepos = await util.inquirer.prompt([
+      {
+        type: 'select',
+        name: 'tempalteRepo',
+        message: 'Select a Template Repo:',
+        choices: data.map((templateRepo: { name: string }) => templateRepo.name),
+      },
+    ]);
+
+    try {
+      const repoName = tempalteRepos['tempalteRepo'];
+      const res = await this.hubService.listAllContestOfRepo(platform, repoName);
+    } catch (error) {
+      this.util.logError(error);
+      process.exit(1);
+    }
+  }
+
+  private async listAllFilesAndEdit(owner: string, repoName: string, path: string) {
     await util.inquirer
       .prompt([
         {
           type: 'select',
-          name: 'tempalteRepo',
-          message: 'Select a Template Repo:',
-          choices: data.map((templateRepo: { name: string }) => templateRepo.name),
+          name: 'file',
+          message: 'Select a File:',
+          choices: data.map((file: { name: string }) => file.name),
         },
       ])
       .then(async (answer) => {
-        const repoName = answer['tempalteRepo'];
+        const fileName = answer['file'];
         const owner = data[0].owner.login;
-
-        const res = await this.hubService.listAllContestOfRepo(owner, repoName);
-        console.log(res);
+        try {
+          await this.hubService.listAllContestOfRepo(owner, repoName);
+        } catch (error) {
+          this.util.logError(error);
+          process.exit(1);
+        }
       });
   }
 }

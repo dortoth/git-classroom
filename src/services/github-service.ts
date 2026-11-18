@@ -94,7 +94,10 @@ export class GitHubService {
     return res.data;
   }
 
-  async listAllContestOfRepo(owner: string, repoName: string) {
-    await axios.get(`${GITHUB_API_URL}/repos/${owner}/${repoName}/contents`);
+  async listAllContestOfRepo(platform: IPlatform, repoName: string) {
+    const res = await this.api(platform.token).get(
+      `/repos/${platform.classroomUrl}/${repoName}/contents`,
+    );
+    return res.data;
   }
 }
