@@ -94,10 +94,44 @@ export class GitHubService {
     return res.data;
   }
 
-  async listAllContestOfRepo(platform: IPlatform, repoName: string) {
-    const res = await this.api(platform.token).get(
-      `/repos/${platform.classroomUrl}/${repoName}/contents`,
-    );
+  /**
+   * Builds the contents URL. Removes leading slashes ("/api/api.md" -> "api/api.md")
+   * and encodes each path segment (spaces etc.) while keeping the "/".
+   */
+  private contentsUrl(platform: IPlatform, repoName: string, path = '') {
+    const cleanPath = path
+      .replace(/^\/+/, '')
+      .split('/')
+      .map(encodeURIComponent)
+      .join('/');
+    return `/repos/${platform.classroomUrl}/${repoName}/contents/${cleanPath}`;
+  }
+
+  async listAllContestOfRepo(platform: IPlatform, repoName: string, path = '') {
+    const res = await this.api(platform.token).get(this.contentsUrl(platform, repoName, path));
     return res.data;
+  }
+
+  async getFileContent(platform: IPlatform, repoName: string, path: string): Promise<string> {
+    const res = await this.api(platform.token).get(this.contentsUrl(platform, repoName, path));
+    return Buffer.from(res.data.content ?? '', 'base64').toString('utf-8');
+  }
+
+  /**
+   * Creates a new file (without sha) or updates an existing one (with sha).
+   */
+  async updateFileContent(
+    platform: IPlatform,
+    repoName: string,
+    path: string,
+    message: string,
+    content: string,
+    sha?: string,
+  ) {
+    await this.api(platform.token).put(this.contentsUrl(platform, repoName, path), {
+      message: message,
+      content: content,
+      sha: sha,
+    });
   }
 }

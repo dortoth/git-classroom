@@ -117,8 +117,6 @@ export class MainMenu {
   }
 
   private exitApplication() {
-    console.log('The application will close now.');
-    console.log('Return soon! ~meow');
-    process.exit(0);
+    this.utils.exitApplication();
   }
 }

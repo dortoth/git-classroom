@@ -32,15 +32,10 @@ export class ManageMembersMenu {
         ]),
       )
       .then((answer) => answer['action']());
+  }
 
-    await util.inquirer.prompt(iP.returnToMainMenu).then(async (answer) => {
-      if (answer['proceed'] === true) {
-        await this.menu.openClassroomMenu(platform);
-      } else {
-        console.log('The program will be terminated now.');
-        process.exit(0);
-      }
-    });
+  private async returnOrExit(platform: IPlatform) {
+    await this.utils.askReturnOrExit(() => this.manageMembers(platform), 'Manage Members Menu');
   }
 
   private async listClassroomMembers(platform: IPlatform) {
@@ -60,6 +55,7 @@ export class ManageMembersMenu {
       console.clear();
       return this.menu.openClassroomMenu(platform);
     }
+    await this.returnOrExit(platform);
   }
 
   private async createClassroomInvitation(platform: IPlatform) {
@@ -82,6 +78,7 @@ export class ManageMembersMenu {
         console.log(`Invitation for ${email} failed.`);
       }
     }
+    await this.returnOrExit(platform);
   }
 
   private async removeClassroomMember(platform: IPlatform) {
@@ -97,5 +94,6 @@ export class ManageMembersMenu {
         console.log(`Removing ${username} failed.`);
       }
     }
+    await this.returnOrExit(platform);
   }
 }

@@ -27,14 +27,6 @@ export const loadClassrooms = [
   },
 ];
 
-export const returnToMainMenu = [
-  {
-    type: 'confirm',
-    name: 'proceed',
-    message: 'Would you like to return to the main menu? Press enter.',
-  },
-];
-
 // ===================== Manage Members =====================
 
 export const enterEmailOfNewUser = [
@@ -103,5 +95,31 @@ export const enterNameOfTempalteRepo = [
     type: 'input',
     name: 'templateRepo',
     message: 'Please enter the name of the template repository \n',
+  },
+];
+
+export const enterMessageOfFile = [
+  {
+    type: 'input',
+    name: 'enterMessageOfFile',
+    message: 'Please enter the commit message of the file \n',
+  },
+];
+
+export const enterPathOfFile = [
+  {
+    type: 'input',
+    name: 'enterPathOfFile',
+    message: 'Please enter the path of the new file (e.g. README.md or api/api.md) \n',
+  },
+];
+
+export const enterContentOfFile = (currentContent = '') => [
+  {
+    type: 'editor',
+    name: 'enterContentOfFile',
+    message:
+      'Please edit the content of the file (opens your editor).\n After saving and closing the editor your changes will be commited \n',
+    default: currentContent,
   },
 ];

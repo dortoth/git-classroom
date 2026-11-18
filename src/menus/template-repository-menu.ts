@@ -26,7 +26,7 @@ export class TemplateRepositoryMenu {
             value: () => this.createTemplateRepo(platform),
           },
           {
-            name: "Edit a Repository's Files",
+            name: "Add or Edit a Repository's Files",
             value: () => this.listAllReposAndUpdate(platform),
           },
           {
@@ -48,11 +48,11 @@ export class TemplateRepositoryMenu {
       }
       try {
         await this.hubService.createTemplateRepository(platform, answer['templateRepo']);
-        console.log(
-          `Template Repository sucessfully created. Tempalte Repository Menu will open soon.`,
+        console.log(`Template Repository sucessfully created.`);
+        await this.util.askReturnOrExit(
+          () => this.openTemplateRepositoryMenu(platform),
+          'Template Repository Menu',
         );
-        await this.util.wait(2500);
-        await this.openTemplateRepositoryMenu(platform);
       } catch (error) {
         console.log(`Sorry that didnt work - please try again!`);
         await this.util.wait(2000);
@@ -67,13 +67,13 @@ export class TemplateRepositoryMenu {
     try {
       data = await this.hubService.loadAllTemplateRepos(platform);
     } catch (error) {
-      this.util.logError(error);
-      process.exit(1);
+      console.log(`Sorry there was a error. Please try again`);
+      await this.openTemplateRepositoryMenu(platform);
     }
 
     if (data.length === 0) {
       console.log('Sorry there exist no template repository. Please add one!');
-      process.exit(1);
+      await this.openTemplateRepositoryMenu(platform);
     }
 
     const tempalteRepos = await util.inquirer.prompt([
@@ -85,34 +85,101 @@ export class TemplateRepositoryMenu {
       },
     ]);
 
+    const repoName = tempalteRepos['tempalteRepo'];
+
+    await util.inquirer
+      .prompt(
+        iP.actionMenu([
+          {
+            name: 'Do you want to create a new File?',
+            value: () => this.createNewFileForTR(platform, repoName),
+          },
+          {
+            name: 'Edit a existing File',
+            value: () => this.listAllFilesAndEdit(platform, repoName),
+          },
+        ]),
+      )
+      .then((answer) => answer['action']());
+  }
+
+  private async listAllFilesAndEdit(platform: IPlatform, repoName: string) {
+    console.log();
     try {
-      const repoName = tempalteRepos['tempalteRepo'];
       const res = await this.hubService.listAllContestOfRepo(platform, repoName);
+
+      await util.inquirer
+        .prompt([
+          {
+            type: 'select',
+            name: 'file',
+            message: 'Please select a file:',
+            choices: res.map((trFile: { path: string; sha: string }) => ({
+              name: trFile.path,
+              value: trFile,
+            })),
+          },
+        ])
+        .then(async (answer) => {
+          await this.editFile(platform, repoName, answer.file.path, answer.file.sha);
+        });
     } catch (error) {
-      this.util.logError(error);
-      process.exit(1);
+      console.log('Sorry it seems like there is no existing file - please add one');
+      await this.util.wait(2000);
+      await this.openTemplateRepositoryMenu(platform);
     }
   }
 
-  private async listAllFilesAndEdit(owner: string, repoName: string, path: string) {
-    await util.inquirer
-      .prompt([
-        {
-          type: 'select',
-          name: 'file',
-          message: 'Select a File:',
-          choices: data.map((file: { name: string }) => file.name),
-        },
-      ])
-      .then(async (answer) => {
-        const fileName = answer['file'];
-        const owner = data[0].owner.login;
-        try {
-          await this.hubService.listAllContestOfRepo(owner, repoName);
-        } catch (error) {
-          this.util.logError(error);
-          process.exit(1);
-        }
-      });
+  private async editFile(platform: IPlatform, repoName: string, path: string, sha: string) {
+    const currentContent = await this.hubService.getFileContent(platform, repoName, path);
+    const { message, content } = await this.askMessageAndContent(currentContent);
+
+    try {
+      await this.hubService.updateFileContent(platform, repoName, path, message, content, sha);
+      console.log(`The content was sucessfully changed`);
+
+      await this.util.askReturnOrExit(
+        () => this.openTemplateRepositoryMenu(platform),
+        'Template Repository Menu',
+      );
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  private async createNewFileForTR(platform: IPlatform, repoName: string) {
+    const resPath = await util.inquirer.prompt(iP.enterPathOfFile);
+    const path = resPath['enterPathOfFile'].trim();
+
+    if (path === '') {
+      console.log('Sorry the path cant be empty - please try again!');
+      await this.util.wait(2000);
+      await this.openTemplateRepositoryMenu(platform);
+      return;
+    }
+
+    const { message, content } = await this.askMessageAndContent();
+
+    try {
+      await this.hubService.updateFileContent(platform, repoName, path, message, content);
+      console.log(`The file ${path} was successfully created`);
+    } catch (error) {
+      console.log('Sorry there was a error please try again');
+    }
+
+    await this.util.askReturnOrExit(
+      () => this.openTemplateRepositoryMenu(platform),
+      'Template Repository Menu',
+    );
+  }
+
+  private async askMessageAndContent(currentContent = '') {
+    const res1 = await util.inquirer.prompt(iP.enterMessageOfFile);
+    const res2 = await util.inquirer.prompt(iP.enterContentOfFile(currentContent));
+
+    const message: string = res1['enterMessageOfFile'];
+    const content = Buffer.from(res2['enterContentOfFile'], 'utf-8').toString('base64');
+
+    return { message, content };
   }
 }
