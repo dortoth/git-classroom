@@ -20,7 +20,8 @@ export class Login {
 
   async startProgram() {
     this.utils.renderBanner('Welcome to', {
-      font: 'chrome',
+      font: 'block',
+      align: 'center',
       colors: ['red'],
     });
 
@@ -28,7 +29,8 @@ export class Login {
     console.clear();
 
     this.utils.renderBanner('Schnurrbertos' + "' " + '|Classroom', {
-      font: 'tiny',
+      font: 'block',
+      align: 'center',
       colors: ['whiteBright'],
     });
 

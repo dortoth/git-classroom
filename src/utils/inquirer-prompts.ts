@@ -88,13 +88,21 @@ export function actionMenu(choices: MenuAction[], message = 'What would you like
   ];
 }
 
-// Template Repo
+// ==================== Template Repo =======================
 
 export const enterNameOfTempalteRepo = [
   {
     type: 'input',
     name: 'templateRepo',
     message: 'Please enter the name of the template repository \n',
+  },
+];
+
+export const emptyTemplateRepi = [
+  {
+    type: 'confirm',
+    name: 'emptyTR',
+    message: 'Should the new template repository have a README?',
   },
 ];
 

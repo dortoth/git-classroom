@@ -1,16 +1,16 @@
 {
-  "name": "git-classroom",
+  "name": "schnurrbertos-classroom",
   "version": "1.0.0",
-  "description": "",
+  "description": "This is a CLI application to manage classrooms in GitHub and GitLab",
   "main": "dist/start.js",
   "scripts": {
     "build": "tsc"
   },
   "bin": {
-    "git-classroom": "dist/start.js"
+    "schnurrbertos-classroom": "dist/start.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "Dorian Toth",
   "license": "ISC",
   "type": "module",
   "dependencies": {

@@ -47,8 +47,25 @@ export class TemplateRepositoryMenu {
         await this.openTemplateRepositoryMenu(platform);
       }
       try {
-        await this.hubService.createTemplateRepository(platform, answer['templateRepo']);
-        console.log(`Template Repository sucessfully created.`);
+        const shouldHaveReadme = await util.inquirer.prompt(iP.emptyTemplateRepi);
+        let isTemplate = false;
+        let data;
+
+        if (!shouldHaveReadme) {
+          data = await this.hubService.createTemplateRepository(
+            platform,
+            answer['templateRepo'],
+            isTemplate,
+          );
+        } else {
+          data = await this.hubService.createTemplateRepository(
+            platform,
+            answer['templateRepo'],
+            (isTemplate = true),
+          );
+        }
+
+        console.log(`Template Repository sucessfully created. (${data.html_url})`);
         await this.util.askReturnOrExit(
           () => this.openTemplateRepositoryMenu(platform),
           'Template Repository Menu',
@@ -174,8 +191,8 @@ export class TemplateRepositoryMenu {
   }
 
   private async askMessageAndContent(currentContent = '') {
-    const res1 = await util.inquirer.prompt(iP.enterMessageOfFile);
     const res2 = await util.inquirer.prompt(iP.enterContentOfFile(currentContent));
+    const res1 = await util.inquirer.prompt(iP.enterMessageOfFile);
 
     const message: string = res1['enterMessageOfFile'];
     const content = Buffer.from(res2['enterContentOfFile'], 'utf-8').toString('base64');

@@ -56,7 +56,10 @@ export class MainMenu {
             type: 'select',
             name: 'organization',
             message: 'Select a Classroom:',
-            choices: data.map((classroom: { login: string }) => classroom.login),
+            choices: data.map((classroom: { login: string; url: string }) => ({
+              name: `${classroom.login} (${classroom.url})`,
+              value: classroom.login,
+            })),
           },
         ])
         .then(async (answer) => {

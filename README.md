@@ -15,5 +15,5 @@ From the project directory:
 After setup, start the app by running:
 
 ```sh
-git-classroom
+schnurrbertos-classroom
 ```

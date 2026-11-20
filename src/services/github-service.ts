@@ -81,12 +81,13 @@ export class GitHubService {
 
   //Template Repository Menu
 
-  async createTemplateRepository(platform: IPlatform, repoName: string) {
-    await this.api(platform.token).post(`/orgs/${platform.classroomUrl}/repos`, {
+  async createTemplateRepository(platform: IPlatform, repoName: string, isTemplate: boolean) {
+    const res = await this.api(platform.token).post(`/orgs/${platform.classroomUrl}/repos`, {
       name: repoName,
       is_template: true,
-      auto_init: true,
+      auto_init: isTemplate,
     });
+    return res.data;
   }
 
   async loadAllTemplateRepos(platform: IPlatform) {
@@ -94,16 +95,8 @@ export class GitHubService {
     return res.data;
   }
 
-  /**
-   * Builds the contents URL. Removes leading slashes ("/api/api.md" -> "api/api.md")
-   * and encodes each path segment (spaces etc.) while keeping the "/".
-   */
   private contentsUrl(platform: IPlatform, repoName: string, path = '') {
-    const cleanPath = path
-      .replace(/^\/+/, '')
-      .split('/')
-      .map(encodeURIComponent)
-      .join('/');
+    const cleanPath = path.replace(/^\/+/, '').split('/').map(encodeURIComponent).join('/');
     return `/repos/${platform.classroomUrl}/${repoName}/contents/${cleanPath}`;
   }
 
@@ -117,9 +110,6 @@ export class GitHubService {
     return Buffer.from(res.data.content ?? '', 'base64').toString('utf-8');
   }
 
-  /**
-   * Creates a new file (without sha) or updates an existing one (with sha).
-   */
   async updateFileContent(
     platform: IPlatform,
     repoName: string,
